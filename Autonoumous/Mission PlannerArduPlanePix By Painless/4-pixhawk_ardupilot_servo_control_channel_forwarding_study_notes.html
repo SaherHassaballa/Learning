@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArduPilot & Pixhawk: Servo Control & Channel Forwarding - Technical Study Notes</title>
+    <style>
+        :root {
+            --bg-canvas: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #3b82f6;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid span strong {
+            color: var(--text-main);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        p {
+            margin-bottom: 1.1rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Concept Block Cards */
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 145px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.1rem 1.3rem;
+            margin: 1.25rem 0;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.08);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.4rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.85rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Diagrams & Code Blocks */
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin: 1.2rem 0;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        /* Q&A Cards */
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        /* Final Synthesis Box */
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 Servo Control/Channel Forwarding in ArduPilot</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=kN3wWIC23KI" target="_blank" rel="noopener noreferrer">YouTube - Painless360</a></span>
+            <span><strong>Duration:</strong> 3m 49s</span>
+            <span><strong>Instructor:</strong> Painless360</span>
+            <span><strong>Main Topic:</strong> Channel Forwarding (RC Pass-Through), Servo Output Function Mapping, and Servo Rail Power Isolation in ArduPilot</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial explains how to actuate an auxiliary physical servo (such as a payload drop release, retractable landing gear, pan-and-tilt camera rig, or cargo hatch) directly from an auxiliary switch on a handheld radio transmitter through an ArduPilot flight controller (demonstrated on a <strong>Pixhawk Cube on a Mini Carrier Board</strong>).
+        </p>
+        <p>
+            Because modern aircraft use serialized digital receiver protocols (S.Bus, CRSF, or ELRS) over a single 3-pin lead into the <code>RC IN</code> port, individual receiver servo pins are no longer accessible. The autopilot must act as an intelligent signal router by executing <strong>Channel Forwarding (RC Pass-Through)</strong>. The video covers identifying incoming transmitter channels in Mission Planner, assigning the destination hardware pin via <code>Servo Output</code> parameters, tuning servo endpoints/midpoints, and solving the critical <strong>servo rail electrical power isolation boundary</strong> using an external Battery Eliminator Circuit (BEC).
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. Channel Forwarding (RC Pass-Through)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A software routing routine inside ArduPilot that intercepts a specific incoming digital channel from the serial receiver stream (e.g., Channel 5 commanded by switch <code>SG</code>) and forwards its raw pulse width directly to an assigned physical output header pin (e.g., <code>Output 8</code>).</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Modern RC receivers transmit up to 16 digital channels across a single wire into <code>RC IN</code>. Without individual PWM pins on the receiver, peripheral actuators must be routed through the flight controller's physical output rail.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> By setting the destination output parameter <code>SERVOx_FUNCTION</code> to the designated pass-through function (such as <code>RCIN5</code> or function value <code>55</code>), ArduPilot bypasses its flight stabilization PID algorithms for that pin and directly mirrors the pilot's switch deflection.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Payload drop hooks, retractable landing gear, camera gimbal pan/tilt servos, nose-wheel steering, glider tow releases, and aerial searchlights.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> A bound multi-channel transmitter/receiver, active digital communication over <code>RC IN</code>, and completed Radio Calibration in Mission Planner.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. The Servo Rail Power Isolation Boundary</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The physical galvanic and electrical isolation between the Pixhawk's internal $5.3\,\text{V}$ processor logic bus and the center positive pin rail ($+5\,\text{V}$) of the <code>MAIN OUT</code> and <code>AUX OUT</code> headers.</div>
+            <div class="concept-field"><span class="concept-label">Why do we study it?</span> Servos draw inductive motor current, generate back-EMF voltage spikes, and can pull heavy stall currents ($1\,\text{A} - 3\,\text{A}+$ per servo). If servos were powered from the flight computer's internal MCU power supply, an overloaded servo would trigger a catastrophic CPU brownout and immediate in-flight system reboot.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Powering the Pixhawk via USB or the primary Power Module ($5.3\,\text{V}$) energizes only the STM32 microcontroller, internal sensors, and the <code>RC IN</code> header. The center positive pin along the servo rail remains completely unpowered ($0.0\,\text{V}$). An external $5\,\text{V} - 6\,\text{V}$ BEC (from an ESC or dedicated UBEC) must be connected to the rail to provide servo operating current.</div>
+            <div class="concept-field"><span class="concept-label">The Engineering Fix:</span> Inject $5\,\text{V}$ power onto the servo rail using an ESC's built-in BEC or wire an external standalone UBEC to the output rail.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Output Calibration Registers (SERVOx_MIN, MAX, TRIM)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> Microsecond ($\mu\text{s}$) pulse-width limit registers in ArduPilot that govern the physical throw boundaries and neutral rest position of an assigned servo channel.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Servos have strict mechanical stops. If the autopilot outputs pulse durations exceeding an actuator's mechanical range, the motor will stall against internal stops, drawing peak current, heating up, and stripping plastic/metal drive gears.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> By adjusting <code>SERVOx_MIN</code> (typically $1000\,\mu\text{s} - 1100\,\mu\text{s}$), <code>SERVOx_MAX</code> (typically $1900\,\mu\text{s} - 2000\,\mu\text{s}$), and <code>SERVOx_TRIM</code> ($1500\,\mu\text{s}$), the builder clamps the travel envelope to match the physical linkage geometry.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Mechanical pushrods, drop-pin releases, and camera mount rotation limits.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Electrical Architecture & Signal Routing</h2>
+        <p>
+            Channel forwarding requires establishing a clean data and power separation across the autopilot interfaces. The table below details the hardware parameters and electrical conditions:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Interface / Channel</th>
+                        <th>Electrical / Logical Specification</th>
+                        <th>Operational Function in Channel Forwarding</th>
+                        <th>Power Source & Rail Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><code>RC IN</code> Port</strong></td>
+                        <td>Inverted/Standard Serial UART (S.Bus, CRSF, Spektrum DSM)</td>
+                        <td>Receives serialized digital stream containing pilot stick and auxiliary switch states (Channels 1–16).</td>
+                        <td><strong>Active (+5.0V):</strong> Energized directly by internal USB bus or Power Module logic rail.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transmitter Switch (SG)</strong></td>
+                        <td>2-Position or 3-Position Hardware Toggle Switch</td>
+                        <td>Assigned in transmitter mixer to generate Channel 5 PWM values ($1000\,\mu\text{s}$ Low to $2000\,\mu\text{s}$ High).</td>
+                        <td>N/A (Handheld transmitter RF packet encoding).</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>Output 8</code> Header Pin</strong></td>
+                        <td>PWM Pulse Output ($50\,\text{Hz}$ analog / $400\,\text{Hz}$ digital)</td>
+                        <td>Assigned to <code>RCIN5</code> (Function <code>55</code>). Streams commanded PWM pulses to the auxiliary servo.</td>
+                        <td><strong>Signal Line Only (S):</strong> Outputs PWM pulse. Center pin (+5V) is completely unpowered by default.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>External BEC / UBEC</strong></td>
+                        <td>Regulated Direct Current ($+5.0\,\text{V} \text{ to } +6.0\,\text{V}$, $3\,\text{A} - 5\,\text{A}$)</td>
+                        <td>Powers the center positive rail of the output headers, supplying high current for servo motors.</td>
+                        <td>Taps main LiPo battery; stepped down via switching or linear DC-DC regulator.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Auxiliary Servo</strong></td>
+                        <td>Micro $9\,\text{g}$ or Standard Actuator ($1000 - 2000\,\mu\text{s}$ pulse range)</td>
+                        <td>Actuates physical mechanism (drops payload, deploys landing gear, rotates camera).</td>
+                        <td>Powered exclusively via the external BEC rail; consumes $< 50\,\text{mA}$ idle, up to $1.5\,\text{A}$ stall.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout danger">
+            <span class="callout-icon">🔴</span>
+            <div>
+                <strong>The Servo Power Starvation Trap:</strong><br>
+                Plugging a servo into <code>Output 8</code> (or any other MAIN or AUX output pin) while the Pixhawk is connected to USB or the Power Module will result in a completely limp servo arm. <strong>The USB bus and the Power Module do not supply voltage to the center pin (+5V) of the output rail.</strong> Without an external BEC connected to the rail, the servo receives signal pulses but zero operating voltage.
+            </div>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>The Parameter Value Trap: <code>RCPassThru</code> (1) vs. <code>RCINx</code> (51–66):</strong><br>
+                In older or advanced ArduPilot parameter tables, setting <code>SERVOx_FUNCTION = 1</code> activates generic <code>RCPassThru</code>, which maps the <em>identical numerical input channel</em> (e.g., Output 8 passes through Input 8). To explicitly forward a specific channel regardless of output index (e.g., forwarding Input Channel 5 to physical Output 8), you must select <strong><code>RCIN5</code></strong> (Parameter integer value: <strong><code>55</code></strong>).
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works (System Architecture & Diagrams) -->
+    <section>
+        <h2>⚙️ System Architecture & Data/Power Flow</h2>
+        <p>The diagram below traces the pilot's switch deflection through the transmitter RF link, into the flight controller's processor, across the isolated power boundary, and out to the physical servo actuator:</p>
+
+        <pre>
+[ HANDHELD TRANSMITTER ]
+  - Toggle Switch SG flipped (High/Low)
+  - Mixer assigns Switch SG to Channel 5 ($1000\,\mu\text{s} \leftrightarrow 2000\,\mu\text{s}$)
+            |
+            v (2.4GHz / 915MHz RF Stream)
+[ S.BUS / SERIAL RECEIVER ]
+            |
+            v (Single 3-Wire Serial Lead: Signal, +5V, Gnd)
++---------------------------------------------------------------------------------------------------+
+| PIXHAWK FLIGHT COMPUTER (CUBE & MINI CARRIER BOARD)                                               |
+|                                                                                                   |
+|   [ RC IN Port ] <=== Receives 16-channel serial stream                                          |
+|         |             (+5V active from internal MCU bus to power receiver)                        |
+|         v                                                                                         |
+|   +-------------------------------------------------------------+                                 |
+|   | STM32 Microcontroller Core (ArduPilot Firmware)             |                                 |
+|   |                                                             |                                 |
+|   |   Primary Flight Channels:                                  |                                 |
+|   |     - Ch 1-4 ===> Handled by EKF & Attitude PID Controller  |                                 |
+|   |                                                             |                                 |
+|   |   Channel Forwarding Logic:                                 |                                 |
+|   |     - Ch 5   ===> Routed directly via SERVO8_FUNCTION = 55  |                                 |
+|   |                   (Bypasses stabilization; pure pass-thru)  |                                 |
+|   +------------------------------+------------------------------+                                 |
+|                                  |                                                                |
+|                                  v (Signal PWM Pulses Only: S Pin)                                |
+|   ===================== ELECTRICAL ISOLATION BOUNDARY =========================================   |
+|   (No voltage passes from internal MCU to the center +5V pin of MAIN OUT!)                        |
+|                                                                                                   |
+|   [ MAIN OUT Header (Pins 1–8) ]                                                                  |
+|     - Pin 8 (Signal): Receives forwarded PWM pulses from Ch 5                                     |
+|     - Pin 8 (Center +5V): DEAD (Requires external BEC)                                            |
+|     - Pin 8 (Ground): Common System Ground                                                        |
++----------------------------------+----------------------------------------------------------------+
+                                   |
+           +-----------------------+-----------------------+
+           | Signal Only (White/Yellow)                    | Ground (-) (Black/Brown)
+           v                                               v
+    +---------------------------------------------------------------+
+    |                      AUXILIARY SERVO                          |
+    |          (Drop Mechanism / Retracts / Camera Tilt)            |
+    +------------------------------+--------------------------------+
+                                   ^
+                                   | +5.0V Operating Power (Red Wire)
+                                   |
+             +---------------------+---------------------+
+             | EXTERNAL 5V BEC (BATTERY ELIMINATOR)      |
+             | - Powered from Main LiPo Flight Pack      |
+             | - Supplies clean 5V to output rail center |
+             +-------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Configuration Workflow</h2>
+        <p>Follow this exact sequence to configure and test channel forwarding safely on the bench:</p>
+
+        <h3>Phase 1: Transmitter Switch Mapping & Verification</h3>
+        <ol>
+            <li>
+                <strong>Assign Switch in Transmitter:</strong> On your handheld radio (OpenTX, EdgeTX, FrSky, Spektrum, RadioMaster), enter the <code>MIXER</code> screen. Assign a hardware switch (such as <code>SG</code> or <code>SA</code>) to an unassigned auxiliary channel (in Painless360's demonstration, <strong>Channel 5</strong>).
+            </li>
+            <li>
+                <strong>Connect to Ground Station:</strong> Connect the Pixhawk to your PC using a direct USB cable. Launch <strong>Mission Planner</strong> and click <strong>CONNECT</strong> ($115200\text{ baud}$).
+            </li>
+            <li>
+                <strong>Audit Incoming Signal in Radio Calibration:</strong>
+                Navigate to: <code>Setup -> Mandatory Hardware -> Radio Calibration</code>.
+                Flip switch <code>SG</code> back and forth. Confirm that the green calibration bar for <strong>Radio 5</strong> moves smoothly between $1000\,\mu\text{s}$ (bottom) and $2000\,\mu\text{s}$ (top). Note the channel number.
+            </li>
+        </ol>
+
+        <h3>Phase 2: Assigning the Output Function in Mission Planner</h3>
+        <ol start="4">
+            <li>
+                <strong>Navigate to Servo Output Menu:</strong>
+                Go to: <code>Setup -> Mandatory Hardware -> Servo Output</code>.
+            </li>
+            <li>
+                <strong>Assign Destination Output Pin:</strong>
+                Locate the physical header pin where your servo is plugged in (Painless360 uses <strong>Output 8</strong>).
+                Click the dropdown menu next to <strong>Output 8</strong> and select:
+                <br>
+                <strong><code>RCIN5</code></strong> (or search for <code>SERVO8_FUNCTION</code> in the Full Parameter Tree and set it to <strong><code>55</code></strong>).
+            </li>
+            <li>
+                <strong>Real-Time Diagnostic Verification:</strong>
+                While looking at the <code>Servo Output</code> screen, flip transmitter switch <code>SG</code>. You will see the numeric indicator and the green slider bar for Output 8 jump dynamically in real time between the minimum ($1000\,\mu\text{s}$) and maximum ($2000\,\mu\text{s}$) positions.
+            </li>
+        </ol>
+
+        <h3>Phase 3: Hardware Power Injection & Live Actuator Testing</h3>
+        <ol start="7">
+            <li>
+                <strong>Safety Check: Remove Propellers!</strong> If an ESC or motor is connected to the vehicle, ensure all propellers are removed before powering the system with a battery.
+            </li>
+            <li>
+                <strong>Connect the Auxiliary Servo:</strong> Plug the servo connector into the <code>Output 8</code> header pins. Ensure proper orientation:
+                <ul>
+                    <li><strong>Signal Pin (White or Orange):</strong> Faces the signal row (bottom on Pixhawk Cube carrier boards).</li>
+                    <li><strong>Positive Pin (Red):</strong> Connects to the center row.</li>
+                    <li><strong>Ground Pin (Black or Brown):</strong> Connects to the ground row (top).</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Inject External 5V Power:</strong>
+                Connect an external $5\,\text{V}$ BEC (either the throttle lead from a BEC-equipped ESC on another output pin, or a standalone UBEC plugged into an unused header slot such as Output 7). The servo will emit a brief mechanical jump and hold its position under torque.
+            </li>
+            <li>
+                <strong>Tune Physical Travel & Endpoints:</strong>
+                In the <code>Servo Output</code> tab, adjust the <strong>Min</strong> (e.g., $1100\,\mu\text{s}$), <strong>Max</strong> (e.g., $1900\,\mu\text{s}$), and <strong>Trim</strong> ($1500\,\mu\text{s}$) values to ensure the servo moves the drop mechanism or landing gear through its full physical stroke without mechanical binding or gear buzzing.
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands, Parameters & Settings -->
+    <section>
+        <h2>💻 Parameters, Mixer Registers & Technical Values</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter Identifier</th>
+                        <th>Standard Value / Setting</th>
+                        <th>Functional Engineering Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><code>SERVO8_FUNCTION</code></strong></td>
+                        <td><code>55</code> (RCIN5)</td>
+                        <td>Assigns physical Output 8 pin to mirror incoming pilot command from RC Channel 5.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_FUNCTION</code></strong></td>
+                        <td><code>51</code> to <code>66</code></td>
+                        <td>Generic pass-through parameters corresponding explicitly to <code>RCIN1</code> through <code>RCIN16</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_FUNCTION</code></strong></td>
+                        <td><code>1</code> (RCPassThru)</td>
+                        <td>Generic 1:1 pass-through (Output $x$ forwards Input $x$). Can cause confusion if input channel differs from output pin.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_MIN</code></strong></td>
+                        <td>$1000\,\mu\text{s} - 1100\,\mu\text{s}$</td>
+                        <td>Clamps the lowest PWM pulse width emitted on that pin to prevent linkage over-travel.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_MAX</code></strong></td>
+                        <td>$1900\,\mu\text{s} - 2000\,\mu\text{s}$</td>
+                        <td>Clamps the highest PWM pulse width emitted on that pin to prevent servo stall.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_TRIM</code></strong></td>
+                        <td>$1500\,\mu\text{s}$ nominal</td>
+                        <td>The neutral pulse width sent to the servo when the incoming channel rests at center.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_REVERSED</code></strong></td>
+                        <td><code>0</code> (Normal) or <code>1</code> (Inverted)</td>
+                        <td>Flips the mechanical actuation direction of the servo without altering transmitter configuration.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Engineering Solutions</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Fault Symptom</th>
+                        <th>Root Cause</th>
+                        <th>Diagnostic Identification</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Servo Remains Completely Limp & Motionless</strong></td>
+                        <td>The center positive rail (+5V) is unpowered because the Pixhawk is only connected via USB or Power Module.</td>
+                        <td>Mission Planner HUD reflects switch motion and Servo Output bars move, but the servo horn has zero mechanical resistance.</td>
+                        <td>Plug an external 5V BEC (from an ESC or dedicated UBEC) into any unused positive/ground pin on the output rail.</td>
+                        <td>Energizes the isolated output power bus independently from the sensitive MCU logic supply, delivering operating current to the servo motor.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Wrong Switch Controls the Servo</strong></td>
+                        <td>The selected <code>SERVOx_FUNCTION</code> parameter does not match the channel assigned to the switch in the transmitter mixer.</td>
+                        <td>Moving Switch SG does not change the servo, but moving another switch or stick does.</td>
+                        <td>Open <code>Radio Calibration</code>, toggle the switch, note the exact channel number that moves, and set <code>SERVOx_FUNCTION</code> to that <code>RCINx</code> value.</td>
+                        <td>Corrects the internal software routing matrix to link the target incoming channel to the physical output pin.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Servo Buzzes, Strains, or Draws Excessive Current</strong></td>
+                        <td>The commanded PWM pulse range ($1000 - 2000\,\mu\text{s}$) drives the servo horn beyond its physical mechanical limits.</td>
+                        <td>Servo emits a loud, high-pitch continuous hum at the end of travel; pushrod flexes; servo gets warm to the touch.</td>
+                        <td>In the <code>Servo Output</code> screen, raise the <strong>Min</strong> (e.g., to $1150\,\mu\text{s}$) and lower the <strong>Max</strong> (e.g., to $1850\,\mu\text{s}$) until buzzing stops.</td>
+                        <td>Restricts the electrical command envelope to match the mechanical stroke of the physical linkage, preventing motor stall and gear stripping.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Servo Operates Backwards from Desired Switch Position</strong></td>
+                        <td>Mechanical linkage geometry is inverted relative to standard PWM timing polarity.</td>
+                        <td>Flipping switch up closes the drop hook instead of opening it.</td>
+                        <td>Check the <strong>Reverse</strong> checkbox next to that output in Mission Planner's <code>Servo Output</code> tab (or set <code>SERVOx_REVERSED = 1</code>).</td>
+                        <td>Inverts output PWM pulse timing in software without requiring messy channel reversals in the handheld transmitter.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect (The Auxiliary Control Chain)</h2>
+        <p>Channel forwarding functions as an end-to-end signal and power pipeline linking radio hardware, flight software, and physical actuators:</p>
+
+        <pre>
+[Pilot Flips Switch SG]
+          |
+          v
+[Handheld Transmitter Mixer] =======> Maps Switch SG to Channel 5
+                                                    |
+                                                    v
+                                      [2.4GHz Digital RF Frame]
+                                                    |
+                                                    v
+                                      [Receiver Outputs S.Bus to RC IN]
+                                                    |
+                                                    v
+                                      [ArduPilot Input Parsing: RC 5]
+                                                    |
+                                                    v
+                                      [Mission Planner Servo Output Matrix]
+                                       - Output 8 Function = RCIN5 (55)
+                                       - Bypasses PID flight loops
+                                                    |
+     +----------------------------------------------+----------------------------------------------+
+     |                                                                                             |
+     v (PWM Pulse Stream: S Pin)                                                                   v (External Power Bus: +5V Pin)
+[Output 8 Signal Header]                                                                     [External 5V BEC (ESC / UBEC)]
+     |                                                                                             |
+     +---------------------------------------> [ PHYSICAL SERVO ] <--------------------------------+
+                                              (Actuates Mechanism:
+                                               Drop Hook / Landing Gear)
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Context & Practical Importance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Channel Forwarding</strong></td>
+                        <td>Routing an incoming control channel from the receiver directly to a designated hardware output pin.</td>
+                        <td>Allows auxiliary pilot commands (switches/knobs) to bypass autonomous flight stabilization and control mechanisms directly.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RC Pass-Through</strong></td>
+                        <td>The ArduPilot software operating mode (<code>RCINx</code>) where output PWM pulse width mirrors incoming RC pulse width.</td>
+                        <td>The core mechanism used to actuate secondary mechanisms without requiring custom programming or dedicated companion computers.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BEC (Battery Eliminator Circuit)</strong></td>
+                        <td>A voltage regulator circuit stepping down high LiPo battery voltage ($11.1\text{V} - 25.2\text{V}$) to $+5.0\text{V}$.</td>
+                        <td>Essential for powering the isolated servo power rail on the Pixhawk flight controller.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Galvanic / Power Isolation</strong></td>
+                        <td>The physical separation of electrical power circuits to prevent current flow between distinct subsystems.</td>
+                        <td>Protects the Pixhawk's internal STM32 CPU and IMUs from inductive voltage spikes and stall-current brownouts caused by servos.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SERVOx_FUNCTION</strong></td>
+                        <td>The primary ArduPilot configuration parameter governing the behavior and routing logic of output pin $x$.</td>
+                        <td>Configures pins for motor throttle, flight control surfaces (ailerons/elevators), or auxiliary pass-through (<code>RCINx</code>).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways</h2>
+        <ul>
+            <li>🔴 <strong>Servos Will Never Move on USB Power:</strong> Never troubleshoot an unresponsive servo connected to a Pixhawk while powering the board solely through USB. USB powers only the CPU and receiver; the servo rail center positive pin remains completely dead until energized by an external 5V BEC.</li>
+            <li>🟢 <strong>Identify the Channel First:</strong> Before touching servo parameters, always open <code>Initial Setup -> Mandatory Hardware -> Radio Calibration</code>, toggle your target switch, and observe which green bar moves to confirm the incoming channel number.</li>
+            <li>🟡 <strong>Use Explicit RCINx Functions:</strong> Avoid setting generic <code>RCPassThru</code> (value <code>1</code>) if your input channel does not match your output pin number. Use explicit parameters such as <code>RCIN5</code> (value <code>55</code>) to route Channel 5 to Output 8.</li>
+            <li>⚠️ <strong>Audit Mechanical Travel Limits:</strong> Always test new servo linkages by hand before powering up. Once powered, ensure the servo does not buzz or strain against physical stops by adjusting <code>Min</code> and <code>Max</code> pulse widths in Mission Planner.</li>
+            <li>🔴 <strong>Remove Propellers During Bench Setup:</strong> Even though you are configuring auxiliary servos, connecting a flight battery to power an ESC BEC can accidentally spin motors if throttle failsafes trigger. Keep propellers off at all times.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>The Power Rule:</strong> Only the <code>RC IN</code> receiver port receives $+5\text{V}$ from internal Pixhawk logic power. The <code>MAIN OUT</code> and <code>AUX OUT</code> positive rails receive zero power by default.</li>
+            <li><strong>Channel Forwarding Mapping:</strong> In Mission Planner's <code>Servo Output</code> screen, set the destination pin to <code>RCINx</code> (where $x$ matches the channel toggled by your transmitter switch).</li>
+            <li><strong>Parameter Numerical Values:</strong> In the Full Parameter Tree, <code>RCIN1</code> through <code>RCIN16</code> correspond to parameter integer values <code>51</code> through <code>66</code>.</li>
+            <li><strong>Reversing Direction:</strong> Reverse backwards servo travel by checking the <strong>Reverse</strong> checkbox in Mission Planner's <code>Servo Output</code> menu, never on the transmitter.</li>
+            <li><strong>Live Monitoring:</strong> Mission Planner displays real-time slider bars on the <code>Servo Output</code> screen, allowing you to verify software routing before connecting physical hardware.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers (Self-Assessment) -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why does a servo connected to a Pixhawk remain completely unresponsive when the board is powered via USB?</div>
+            <div class="qa-answer">The Pixhawk features intentional electrical isolation between its internal microcontroller logic supply and the external servo rail header. USB power energizes only the STM32 processor, internal IMU sensors, and the <code>RC IN</code> port. The center positive pin (+5V) along the MAIN and AUX output rails receives zero voltage to protect the sensitive flight computer from inductive voltage spikes and stall-current brownouts caused by servos. An external 5V BEC must be connected to power the rail.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: How do you identify which RC channel is assigned to a physical switch on your transmitter?</div>
+            <div class="qa-answer">Connect the Pixhawk to Mission Planner, navigate to <code>Initial Setup -> Mandatory Hardware -> Radio Calibration</code>, and physically toggle the switch on the transmitter. Watch the green graphical indicator bars move across the screen; the bar that jumps between $1000\,\mu\text{s}$ and $2000\,\mu\text{s}$ identifies the active incoming channel number (e.g., Channel 5).</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: What is the difference between setting SERVOx_FUNCTION to 1 (RCPassThru) versus setting it to 55 (RCIN5)?</div>
+            <div class="qa-answer">Setting <code>SERVOx_FUNCTION = 1</code> (generic <code>RCPassThru</code>) mirrors the <em>identical numerical channel</em> (for example, physical Output 8 will attempt to mirror incoming Channel 8). If the pilot's switch is assigned to Channel 5, the servo on Output 8 will not move. Setting <code>SERVOx_FUNCTION = 55</code> (explicit <code>RCIN5</code>) directs physical Output 8 to forward incoming Channel 5 regardless of pin index.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: How do you prevent a forwarded servo from mechanically binding against internal stops?</div>
+            <div class="qa-answer">In Mission Planner's <code>Servo Output</code> screen, locate the destination output pin and adjust the <code>Min</code> and <code>Max</code> microsecond limit fields. Narrowing the pulse range (e.g., raising <code>Min</code> from $1000\,\mu\text{s}$ to $1150\,\mu\text{s}$ and lowering <code>Max</code> from $2000\,\mu\text{s}$ to $1850\,\mu\text{s}$) restricts physical actuator travel to match the mechanical stroke of the linkage.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: Where should servo reversing be configured if the actuator moves backwards relative to the switch?</div>
+            <div class="qa-answer">Servo reversing should be configured exclusively inside Mission Planner by checking the <strong>Reverse</strong> checkbox for that specific output pin in the <code>Servo Output</code> menu (or setting <code>SERVOx_REVERSED = 1</code> in parameters). Reversing auxiliary channels on the transmitter should be avoided to maintain clean, standardized radio profiles.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Following Painless360's ArduPilot auxiliary actuation curriculum, the logical learning progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Verified in This Video:</strong><br>
+                Radio channel mapping, Mission Planner Servo Output configuration, external BEC power injection, and endpoint tuning.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Autonomous Mission Servo Actuation (DO_SET_SERVO):</strong>
+                Triggering payload release mechanisms automatically at specific GPS waypoints inside Mission Planner's Flight Plan screen by disabling manual pass-through (`SERVOx_FUNCTION = 0`) and sending MAVLink command pulses.
+            </li>
+            <li>
+                <strong>Camera Gimbal Stabilization:</strong>
+                Configuring ArduPilot's integrated mount drivers to automatically stabilize a pan-and-tilt servo mount against aircraft roll and pitch movements while accepting manual tilt overrides from a radio slider.
+            </li>
+            <li>
+                <strong>High-Current Isolation & Optocoupled Outputs:</strong>
+                Wiring high-torque metal-gear servos ($> 2\,\text{A}$) using dedicated optoisolators and independent dual-battery supplies to prevent electrical switching noise from polluting flight telemetry.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that <strong>channel forwarding routes a serialized receiver channel directly to a physical output pin</strong>, that the <strong>target output must be mapped to <code>RCINx</code></strong> (e.g., <code>SERVO8_FUNCTION = 55</code>), that the <strong>Pixhawk servo rail requires an external 5V BEC</strong> to supply motor operating power, and that <strong>endpoints must be clamped in software to prevent mechanical stall</strong>, you have mastered the engineering foundations of this tutorial and can safely control auxiliary mechanisms on any ArduPilot vehicle.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
