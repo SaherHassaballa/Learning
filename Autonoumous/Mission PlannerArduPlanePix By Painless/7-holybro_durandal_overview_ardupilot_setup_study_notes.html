@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holybro Durandal Overview & ArduPilot Setup - Technical Study Notes</title>
+    <style>
+        :root {
+            --bg-canvas: #090d16;
+            --bg-card: #0f172a;
+            --bg-card-alt: #172239;
+            --bg-code: #050811;
+            --border-dim: #1e293b;
+            --border-bright: #38bdf8;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.75;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        header.meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0c1220 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.35;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid strong {
+            color: var(--text-heading);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 1.38rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: 0.65rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            margin: 1.6rem 0 0.8rem 0;
+        }
+
+        p {
+            margin-bottom: 1.15rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.75rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.85rem;
+            font-size: 0.96rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 190px;
+        }
+
+        .callout {
+            border-radius: 8px;
+            padding: 1.15rem 1.35rem;
+            margin: 1.35rem 0;
+            display: flex;
+            gap: 0.95rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.09);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.09);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.09);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.09);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            color: var(--accent-cyan);
+            margin: 1.3rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.35rem;
+            margin-bottom: 1.15rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.25rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 Holybro Durandal Overview and Setup Steps</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://youtu.be/hZ1F3uuzQZ8" target="_blank" rel="noopener noreferrer">YouTube - Painless360</a></span>
+            <span><strong>Duration:</strong> 18m 58s</span>
+            <span><strong>Instructor:</strong> Painless360</span>
+            <span><strong>Main Topic:</strong> Holybro Durandal H7 Flight Controller Architecture, Hardware Unboxing, Bench Setup & ArduPilot Configuration</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial provides an in-depth hardware evaluation, unboxing, and bench-commissioning guide for the <strong>Holybro Durandal</strong> flight controller running the <strong>ArduPilot</strong> software ecosystem. The Durandal occupies a strategic middle ground in the autonomous unmanned systems market: positioned between expensive, bulky modular systems (such as the Pixhawk Cube family on carrier boards) and unbranded, low-reliability marketplace clones.
+        </p>
+        <p>
+            Painless360 examines the physical architecture of the flight controller—notably its monolithic CNC-machined aluminum housing and integrated high-speed <strong>STM32 H7</strong> processor—and benchmarks its physical weight against the Pixhawk Cube. The video then transitions directly to the workbench, providing a step-by-step walkthrough of automated firmware flashing in Mission Planner, 6-axis accelerometer calibration utilizing the flat-edged metal casing, dual-compass live spherical calibration, and Holybro PM02 Power Module analog sensor parameter setup.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. The Monolithic High-Reliability Flight Controller Architecture</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A single-chassis flight management unit (FMU) design that integrates the microcontroller, internal sensor suite, I/O header pinouts, and peripheral ports inside a rigid, CNC-machined anodized aluminum housing without requiring a separate, bulky carrier board.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Modular two-piece flight controllers (like the Pixhawk Cube + carrier board) add physical height, weight, and mechanical complexity that can make installation difficult in tight fixed-wing fuselages. Conversely, cheap open-board clones lack electromagnetic shielding and sensor redundancy. The Durandal delivers enterprise-tier reliability and sensor isolation in a compact footprint.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> All microcontrollers, internal IMUs, power filtering capacitors, and JST-GH connector sockets are mounted directly to an internal multilayer printed circuit board housed inside the metal enclosure, with machined cutouts for port headers, micro-USB, and the micro-SD card slot.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> High-end autonomous fixed-wing aircraft, mapping drones, commercial multirotors, and unmanned ground vehicles (UGVs).</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> Upgrading an autonomous survey wing from an entry-level plastic flight controller to the Durandal to prevent IMU thermal drift and reduce airframe weight by $\approx 24\,\text{g}$ compared to a Cube setup.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Basic familiarity with Pixhawk hardware architecture and Mission Planner GCS software.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. The STM32 H7 Processing Core ($480\,\text{MHz}$)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An ARM Cortex-M7 32-bit high-performance microcontroller (specifically the STM32H743IIK6) operating at a core clock frequency of $480\,\text{MHz}$ with $2\,\text{MB}$ flash memory and $1\,\text{MB}$ RAM.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Modern autonomous flight code executes computationally intensive real-time algorithms: 24-state Extended Kalman Filtering (EKF3), high-rate vibration notch filtering (FFT-based dynamic notch), real-time obstacle avoidance, terrain following, and multi-sensor fusion. Legacy F4 microcontrollers ($168\,\text{MHz}$) frequently hit CPU saturation limits under these workloads.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The H7 core runs the NuttX Real-Time Operating System (RTOS) and ArduPilot thread scheduler, executing primary attitude estimation loops and rate controllers at up to $400\,\text{Hz} - 1000\,\text{Hz}$ without processor throttling.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Modern Pixhawk FMUv5X, FMUv6, and high-end enterprise autopilots.</div>
+            <div class="concept-field"><span class="concept-label">Relationship to other concepts:</span> In the Pixhawk Cube family, the H7 processor is available only on the flagship **Cube Orange**, whereas the entry-level Cube Black relies on the older STM32 F4 ($168\,\text{MHz}$). The Durandal matches Cube Orange compute power at a lower cost.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Multi-Sensor Redundancy & Independent Bus Isolation</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The integration of multiple, physically separate Inertial Measurement Units (IMUs), barometric pressure altimeters, and magnetometers connected to the primary MCU across independent serial communication buses.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Sensor failures in autonomous aviation are fatal if single-point failure modes exist. If an accelerometer saturates from high-frequency motor vibration or an I2C compass line locks up, ArduPilot's EKF can detect the divergence, flag the failing sensor, and switch state estimation seamlessly to the healthy secondary sensor mid-flight.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The Durandal pairs an internally vibration-isolated primary IMU (ICM-20689 / BMI088) with an independent secondary IMU (ICM-20602 / ICM-42688) routed over separate SPI buses. Dual high-precision barometers (MS5611) sample atmospheric pressure simultaneously.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All flight-critical autonomous systems requiring fail-operational flight logic.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. Current-Shunt & Voltage-Divider Analog Telemetry (PM02)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The hardware power management module that steps down raw LiPo voltage ($2\text{S} - 12\text{S}$) to a stable $+5.3\,\text{V}$ logic supply while outputting two scaled analog voltage signals proportional to battery voltage and current draw.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> The flight controller's internal Analog-to-Digital Converter (ADC) pins cannot tolerate voltages above $3.3\,\text{V}$. The PM02 scales battery voltage down through a precision resistor divider and converts high motor current into micro-volt drops across a low-resistance shunt resistor.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> In Mission Planner, the user configures two mathematical multiplier constants: the **Voltage Divider** ($18.182$) and the **Amperes Per Volt** ($36.364\,\text{A/V}$). The autopilot multiplies raw ADC readings by these values to calculate instantaneous pack voltage ($V$) and cumulative milliamp-hour consumption ($\text{mAh}$) in real time.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Wired directly inline between the main flight battery connector (XT60) and the vehicle's electronic speed controllers.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Specifications & Hardware Architecture</h2>
+        <p>
+            The table below contrasts the technical specifications of the Holybro Durandal against its primary commercial counterparts in the ArduPilot ecosystem:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Specification / Feature</th>
+                        <th>Holybro Durandal</th>
+                        <th>Pixhawk Cube Orange</th>
+                        <th>Pixhawk Cube Black</th>
+                        <th>Budget AIO (e.g., Matek F405)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Processor</strong></td>
+                        <td>STM32H743IIK6 ($480\,\text{MHz}$)</td>
+                        <td>STM32H753VIT6 ($400 - 480\,\text{MHz}$)</td>
+                        <td>STM32F427VIT6 ($168\,\text{MHz}$)</td>
+                        <td>STM32F405RGT6 ($168\,\text{MHz}$)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Form Factor / Chassis</strong></td>
+                        <td>Monolithic CNC Aluminum</td>
+                        <td>2-Piece (Cube + Carrier Board)</td>
+                        <td>2-Piece (Cube + Carrier Board)</td>
+                        <td>Bare PCB / Exposed Solder Pads</td>
+                    </tr>
+                    <tr>
+                        <td><strong>System Weight (FC + GPS)</strong></td>
+                        <td>$\mathbf{\approx 101.5\,\text{g}}$ ($24\,\text{g}$ lighter)</td>
+                        <td>$\approx 124 - 126\,\text{g}$</td>
+                        <td>$\approx 124 - 126\,\text{g}$</td>
+                        <td>$\approx 35 - 50\,\text{g}$</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IMU Sensor Suite</strong></td>
+                        <td>Dual redundant IMUs (isolated)</td>
+                        <td>Triple redundant IMUs</td>
+                        <td>Triple redundant IMUs</td>
+                        <td>Single 6-axis IMU (No redundancy)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Barometric Sensors</strong></td>
+                        <td>Dual MS5611 Barometers</td>
+                        <td>Dual MS5611 Barometers</td>
+                        <td>Dual MS5611 Barometers</td>
+                        <td>Single DPS310 / BMP280</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internal IMU Heating</strong></td>
+                        <td>No onboard heating loop</td>
+                        <td>Yes ($45^\circ\text{C}$ thermal chamber)</td>
+                        <td>Yes ($45^\circ\text{C}$ thermal chamber)</td>
+                        <td>No heating chamber</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internal Acoustic Buzzer</strong></td>
+                        <td>Integrated piezoelectric buzzer</td>
+                        <td>External flying-lead buzzer</td>
+                        <td>External flying-lead buzzer</td>
+                        <td>External solder buzzer pads</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Onboard Analog OSD Chip</strong></td>
+                        <td>No (External MAVLink OSD req.)</td>
+                        <td>No (External MAVLink OSD req.)</td>
+                        <td>No (External MAVLink OSD req.)</td>
+                        <td>Yes (MAX7456 analog chip onboard)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Power Module Bundled</strong></td>
+                        <td>Holybro PM02 ($2\text{S} - 12\text{S}$)</td>
+                        <td>Power Brick Mini / PM02</td>
+                        <td>Standard Power Brick</td>
+                        <td>Direct LiPo battery solder pads</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout danger">
+            <span class="callout-icon">🔴</span>
+            <div>
+                <strong>The Servo Rail Power Isolation Rule:</strong><br>
+                Like all Pixhawk enterprise boards, the center positive rail ($+5\,\text{V}$) along the <strong>MAIN and AUX servo header is completely isolated from the internal logic bus</strong>. Supplying power via USB or plugging in the PM02 Power Module powers the internal MCU, internal IMUs, and the <code>RC IN</code> receiver pins, but <strong>outputs zero voltage to the servo pins</strong>. Servos will remain limp and completely unpowered until an external $5.0\,\text{V} - 6.0\,\text{V}$ BEC (from an ESC or dedicated UBEC) is connected directly to the output rail.
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works -->
+    <section>
+        <h2>⚙️ How It Works: System Architecture & Data Routing</h2>
+        <p>
+            The diagram below illustrates the physical topology, bus connections, and signal flow across the Holybro Durandal hardware architecture:
+        </p>
+
+        <pre>
+                                     [ GROUND CONTROL STATION ]
+                                      (Mission Planner on PC)
+                                                 |
+                                                 v (USB / SiK Radio @ 115200 / 57600 Baud)
++---------------------------------------------------------------------------------------------------+
+| HOLYBRO DURANDAL FLIGHT COMPUTER (CNC Aluminum Chassis)                                            |
+|                                                                                                   |
+|  [ LiPo Battery ] ===> [ PM02 Power Module ] ===(Clean 5.3V + Analog Voltage/Current Sense)===>  |
+|                               |                                                |                  |
+|                               +====(Raw High-Amperage Battery Power)====> ESC  |                  |
+|                                                                                v                  |
+|  +-----------------------------------------------------------------------------+               |
+|  | HARDWARE INTERFACES & MCU PROCESSING CORE                                   |               |
+|  |                                                                             |               |
+|  |  [POWER 1] <--- 6-pin Molex/JST-GH cable from PM02 Power Module             |               |
+|  |  [POWER 2] <--- Optional secondary backup power module input               |               |
+|  |  [GPS]     <=== (UART Serial TX/RX + I2C Bus) ===> External GPS/Compass Puck|               |
+|  |  [TELEM 1] <=== (Serial TTL @ 57600) ==========> SiK Wireless Radio / OSD  |               |
+|  |  [TELEM 2] <=== (Serial TTL) ==================> Companion Computer / GCS   |               |
+|  |  [RC IN]   <--- (S.Bus / PPM / CRSF Digital) <== Radio Control Receiver     |               |
+|  |  [CAN 1/2] <=== High-Speed DroneCAN UAVCAN Bus (CAN-based GPS/Peripherals)  |               |
+|  |                                                                             |               |
+|  |  ======================== CORE STM32 H743 PROCESSING =====================  |               |
+|  |  - Clock Speed: 480 MHz                                                     |               |
+|  |  - Primary IMU: ICM-20689 / BMI088 (SPI Bus 1, Internal Silicone Dampened)  |               |
+|  |  - Secondary IMU: ICM-20602 / ICM-42688 (SPI Bus 2, Independent Silicon)   |               |
+|  |  - Dual Barometers: MS5611-01BA03 (High-Precision Altitude)                 |               |
+|  |  - Integrated Piezoelectric Acoustic Buzzer                                 |               |
+|  |  - Pre-installed Micro-SD Card (DataFlash Engineering Flight Logs)          |               |
+|  |  =========================================================================  |               |
+|  |                                                                             |               |
+|  |  [MAIN & AUX SERVO HEADER]                                                  |               |
+|  |  - Top Pin: Ground (-)                                                      |               |
+|  |  - Center Pin: +5V Rail (ISOLATED: Powered exclusively via external ESC BEC)|               |
+|  |  - Bottom Pin: PWM / DShot Signal Outputs (Pins 1 - 8 MAIN, Pins 9 - 14 AUX)|               |
+|  +-----------------------------------------------------------------------------+               |
++---------------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Bench Commissioning</h2>
+        <p>
+            Painless360 demonstrates an end-to-end workbench setup protocol to validate all internal silicon, sensors, and power calibration before installing the hardware inside an airframe:
+        </p>
+
+        <h3>Step 1: Environmental Preparation & Clean Mission Planner Installation</h3>
+        <ol>
+            <li>
+                <strong>Update Ground Station Software:</strong> Modern STM32 H7 processors require current Windows USB Virtual COM Port (VCP) drivers and bootloader communication profiles. Uninstall any outdated Mission Planner installations and download the latest stable release from <code>ardupilot.org</code>.
+            </li>
+            <li>
+                <strong>Component Interconnect:</strong> Connect the external GPS/compass puck into the dedicated <code>GPS</code> port. Connect the 6-pin Molex Clik-Mate harness from the PM02 Power Module into <strong><code>POWER 1</code></strong>.
+            </li>
+            <li>
+                <strong>Connect USB Directly:</strong> Plug a high-quality micro-USB cable directly into a native motherboard USB port on your PC (avoiding unpowered external USB hubs).
+            </li>
+        </ol>
+
+        <h3>Step 2: Automated Firmware Flashing (The Disconnected Rule)</h3>
+        <ol>
+            <li>Launch Mission Planner. <strong>Do NOT click the green "CONNECT" button</strong> in the top-right corner.</li>
+            <li>Navigate to <code>Initial Setup -> Install Firmware</code>.</li>
+            <li>Click the target vehicle icon: <strong>Plane</strong> (for ArduPlane) or <strong>Copter</strong> (for ArduCopter).</li>
+            <li>Click <strong>Yes</strong> to confirm. Mission Planner queries the H7 bootloader directly, automatically detects the Holybro Durandal hardware profile, erases old flash sectors, downloads the official compiled H7 hex binary, and streams it to the MCU.</li>
+            <li>Once completed, the Durandal's internal piezoelectric buzzer emits a rising confirmation musical chime.</li>
+            <li>Select the newly enumerated COM port (e.g., <code>COM5 - Durandal</code>) in the top-right dropdown, verify baud rate is set to <strong><code>115200</code></strong>, and click <strong>CONNECT</strong>.</li>
+        </ol>
+
+        <h3>Step 3: 6-Axis Accelerometer Calibration</h3>
+        <ol>
+            <li>Navigate to <code>Initial Setup -> Mandatory Hardware -> Accelerometer Calibration</code>.</li>
+            <li>Click <strong>Calibrate Accelerometer</strong>.</li>
+            <li>
+                Sequentially position the Durandal through all six geometric planes using the machined rectangular edges of the aluminum casing:
+                <ul>
+                    <li><strong>Level:</strong> Flat on desk, top face pointing upward. Click <em>Done</em>.</li>
+                    <li><strong>Left:</strong> Resting squarely on its left CNC edge. Click <em>Done</em>.</li>
+                    <li><strong>Right:</strong> Resting squarely on its right CNC edge. Click <em>Done</em>.</li>
+                    <li><strong>Nose Down:</strong> Positioned vertically with the front arrow pointing straight down. Click <em>Done</em>.</li>
+                    <li><strong>Nose Up:</strong> Positioned vertically with the front arrow pointing straight up. Click <em>Done</em>.</li>
+                    <li><strong>Back (Inverted):</strong> Placed upside down with the bottom resting flat. Click <em>Done</em>.</li>
+                </ul>
+            </li>
+            <li><em>Critical Technique:</em> Ensure the board is completely motionless before clicking each key; hand vibrations during sampling inject acceleration bias into the Extended Kalman Filter (EKF).</li>
+        </ol>
+
+        <h3>Step 4: Dual Compass (Magnetometer) Live Calibration</h3>
+        <ol>
+            <li>
+                <strong>Physical Alignment:</strong> The Durandal houses an internal magnetometer, while the external GPS puck houses the primary navigation magnetometer. Ensure the forward arrow engraved on the GPS puck is oriented parallel to the forward arrow on top of the Durandal metal case (use double-sided tape temporarily on the bench).
+            </li>
+            <li>Navigate to <code>Mandatory Hardware -> Compass</code>.</li>
+            <li>Click <strong>Live Calibration</strong>.</li>
+            <li>Pick up both units together and tumble the assembly smoothly through 3D space across all axes (roll, pitch, and yaw) until the graphical sample spheres fill with data points and turn green.</li>
+            <li>Click <strong>OK</strong>. Perform a complete power-cycle / reboot of the autopilot to commit the newly calculated hard-iron and soft-iron offset matrices ($X, Y, Z$).</li>
+        </ol>
+
+        <h3>Step 5: PM02 Power Module Configuration</h3>
+        <ol>
+            <li>Navigate to <code>Initial Setup -> Optional Hardware -> Battery Monitor</code>.</li>
+            <li>Set <strong>Monitor</strong> to: <code>Analog Voltage and Current</code>.</li>
+            <li>Set <strong>Sensor</strong> to: <code>9: Other</code> (or select Holybro PM02 if available in presets).</li>
+            <li>Set <strong>APM Ver</strong> to: <code>Pixhawk / Durandal</code>.</li>
+            <li>
+                Enter the factory-calibrated constants supplied on the Holybro reference card:
+                <ul>
+                    <li><strong>Voltage Divider:</strong> <strong><code>18.182</code></strong></li>
+                    <li><strong>Amperes Per Volt:</strong> <strong><code>36.364</code></strong></li>
+                </ul>
+            </li>
+            <li>Connect a charged LiPo battery through the PM02; verify that the Mission Planner HUD instantly reflects the pack's real-time terminal voltage and low-idle current draw.</li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands / Code -->
+    <section>
+        <h2>💻 Parameter Configurations & Flight Modes</h2>
+
+        <h3>Battery Monitor Parameter Configuration Block</h3>
+        <pre><code># ==============================================================================
+# HOLYBRO DURANDAL & PM02 POWER MANAGEMENT PARAMETERS
+# ==============================================================================
+
+# Enable analog monitoring for battery monitor 1
+BATT_MONITOR = 4            # 4 = Analog Voltage and Current
+
+# Assign primary pin registers for the STM32 H7 architecture
+BATT_VOLT_PIN = 16          # Durandal dedicated ADC voltage sensing pin
+BATT_CURR_PIN = 17          # Durandal dedicated ADC current sensing pin
+
+# Holybro PM02 Factory Scaling Multipliers
+BATT_VOLT_MULT = 18.182     # Voltage divider ratio: V_meas = V_analog * 18.182
+BATT_AMP_PERVLT = 36.364    # Current shunt ratio:   I_meas = V_shunt * 36.364 A/V
+
+# Battery safety threshold capacities (Example for a 3S 2200mAh pack)
+BATT_CAPACITY = 2200        # Nominal capacity in milliamp-hours (mAh)
+BATT_LOW_VOLT = 10.5        # Low voltage alarm floor (3.50V per cell)
+BATT_CRT_VOLT = 9.9         # Critical voltage alarm floor (3.30V per cell)
+BATT_FS_VOLT_ACT = 2        # 2 = Return-To-Launch (RTL) upon voltage breach</code></pre>
+
+        <h3>Visual & Acoustic Status Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Visual / Acoustic Indicator</th>
+                        <th>System State</th>
+                        <th>Operational Meaning & Safety Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Flashing Red & Blue LEDs</strong></td>
+                        <td>Initializing / IMU Boot</td>
+                        <td>Autopilot is booting the NuttX RTOS and calibrating gyro zero-bias. <strong>Do not move or bump the aircraft.</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flashing Blue Only</strong></td>
+                        <td>Disarmed (No GPS Fix)</td>
+                        <td>Sensor loops healthy; system is searching for GNSS satellite constellation. Navigation flight modes locked out.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flashing Green</strong></td>
+                        <td>Disarmed (3D GPS Lock)</td>
+                        <td>Horizontal Dilution of Precision ($HDOP < 1.5$) confirmed with $\ge 9$ satellites. Cleared for safe arming sequence.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Solid Green LED</strong></td>
+                        <td>Armed & Live</td>
+                        <td>Motors and servos live. Active high-voltage output engaged; safety interlocks cleared.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Double-Flashing Yellow</strong></td>
+                        <td>Failsafe Triggered</td>
+                        <td>Radio link loss, critical battery voltage breach, or geofence violation. Autopilot executing RTL/Land.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rising Musical Chime (Internal)</strong></td>
+                        <td>Firmware Boot Complete</td>
+                        <td>Emitted by the integrated piezoelectric buzzer upon successful flash memory verification.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Solutions (Durandal Troubleshooting)</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Problem</th>
+                        <th>Underlying Root Cause</th>
+                        <th>How to Identify Problem</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mission Planner Battery Monitor Dropdowns Greyed Out</strong></td>
+                        <td>Firmware profile on the board is uninitialized or running an outdated factory version incompatible with current GCS schema.</td>
+                        <td>Attempting to select PM02 presets in the Battery Monitor tab yields non-responsive or blank dropdowns.</td>
+                        <td>Execute a complete firmware re-flash using <code>Install Firmware</code> in Mission Planner while disconnected, then enter multiplier numbers manually.</td>
+                        <td>Rewrites fresh non-volatile parameters matching the latest ArduPilot parameter schema and enables manual multiplier entry.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Servos Completely Limp & Unresponsive on MAIN/AUX</strong></td>
+                        <td>The center positive pin ($+5\text{V}$) of the output header is electrically isolated from the USB and Power Module bus.</td>
+                        <td>Receiver responds in Mission Planner, but servos have no mechanical holding torque and cannot move.</td>
+                        <td>Connect an external $5.0\,\text{V} - 6.0\,\text{V}$ BEC (e.g., from an ESC throttle lead) into an unused servo pin on the output rail.</td>
+                        <td>Supplies independent electrical power to the servo bus while maintaining isolation for the flight computer's primary logic circuits.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>No Graphical Telemetry in Analog FPV Goggles</strong></td>
+                        <td>The Durandal does not integrate an analog MAX7456 OSD video chip on its internal PCB.</td>
+                        <td>Camera video passes cleanly through to the VTX, but the pilot sees no artificial horizon, battery, or GPS overlay.</td>
+                        <td>Install an external MAVLink OSD module (such as the Holybro Micro OSD v2) wired to the <code>TELEM 1</code> serial port.</td>
+                        <td>The external board reads MAVLink serial packets, synthesizes the graphical HUD overlay, and injects it into the analog video signal.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compass Calibration Fails: <code>Bad Compass Health</code></strong></td>
+                        <td>The external GPS/compass puck was calibrated rotated at an angle relative to the internal flight controller compass.</td>
+                        <td>Progress bar hangs, sample variance exceeds tolerance, or Mission Planner rejects the calibration matrices.</td>
+                        <td>Secure both the GPS puck and the Durandal with double-sided tape so their forward arrows are parallel; rerun Live Calibration outdoors.</td>
+                        <td>Ensures both magnetometers read identical Earth magnetic flux vectors simultaneously across all 3D rotational planes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Virtual COM Port Disconnects During Firmware Upload</strong></td>
+                        <td>USB cable connected through an unpowered external USB hub, causing bus voltage drops during flash memory erase cycles.</td>
+                        <td>Mission Planner displays "Communication Error" or hangs at "Detecting Board".</td>
+                        <td>Connect the micro-USB cable directly into a native high-speed rear USB 3.0 port on the computer motherboard.</td>
+                        <td>Provides stable $+5.0\,\text{V}$ bus power and clean D+/D- differential data lines for STM32 H7 DFU bootloader transfers.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect: The Closed-Loop Architecture</h2>
+        <p>
+            The physical sensors, H7 compute core, and peripheral interfaces function as an interdependent cyber-physical control loop:
+        </p>
+
+        <pre>
+[ LiPo Battery (Raw Power) ]
+             |
+             v
+   [ Holybro PM02 Module ] ---------------> [ Analog Voltage / Current ADC ]
+   (Steps down to clean 5.3V)                               |
+             |                                              v
+             v                                    [ Extended Kalman Filter ]
+    [ POWER 1 Port ]                              (Evaluates battery capacity &
+             |                                     triggers autonomous RTL)
+             v                                              ^
+  [ STM32 H7 Core (480 MHz) ]                               |
+  - EKF State Fusion Algorithm <----------------------------+
+  - High-Rate PID Control Loops <------------+              |
+             ^                               |              |
+             |                               |              |
+    (Dual SPI Buses)                  (Dual I2C Buses)      |
+    +--------+--------+               +------+-------+      |
+    |                 |               |              |      |
+    v                 v               v              v      v
+[ Primary IMU ]  [ Sec. IMU ]    [ GPS Puck ]  [ Dual Baros ]
+(ICM-20689 Core) (ICM-20602)     (Compass Mag) (MS5611 Alt)
+             |
+             v
+  [ High-Speed PWM Outputs ]
+  (MAIN & AUX Output Rails)
+             |
+             v (Motor Torques & Servo Throws)
+  [ Physical Aircraft Dynamics ]
+        </pre>
+
+        <div class="callout info">
+            <span class="callout-icon">💡</span>
+            <div>
+                <strong>Sensor Redundancy & Failure Mitigation:</strong><br>
+                If high-frequency motor vibration causes <strong>Primary IMU (ICM-20689)</strong> to saturate its accelerometer registers, the <strong>STM32 H7 processor</strong> instantly detects the divergence against <strong>Secondary IMU (ICM-20602)</strong>. Rather than suffering an attitude tumble or flyaway, the EKF switches primary state estimation to the secondary sensor within milliseconds, maintaining continuous flight stability.
+            </div>
+        </div>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Why It Matters</th>
+                        <th>Practical Workshop Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>STM32 H7</strong></td>
+                        <td>A 32-bit ARM Cortex-M7 microcontroller operating at $480\,\text{MHz}$ with double-precision floating-point hardware.</td>
+                        <td>Provides the processing power required to run EKF3 state estimation, dynamic FFT notch filtering, and complex autonomy loops without CPU throttling.</td>
+                        <td>The core processor running inside the Holybro Durandal and Pixhawk Cube Orange.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FMUv5X / FMUv6</strong></td>
+                        <td>Pixhawk open-hardware standards defining board pinouts, processor interfaces, and sensor bus routing.</td>
+                        <td>Guarantees that ArduPilot and PX4 firmware compile cleanly for third-party commercial flight controllers.</td>
+                        <td>The engineering standard to which the Holybro Durandal is designed.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PM02 Power Module</strong></td>
+                        <td>An inline hardware regulator providing clean $+5.3\,\text{V}$ logic power along with analog voltage and current monitoring.</td>
+                        <td>Protects the flight computer from inductive voltage spikes while monitoring battery capacity ($\text{mAh}$) to trigger safety failsafes.</td>
+                        <td>Configured in Mission Planner with a voltage multiplier of $18.182$ and current multiplier of $36.364\,\text{A/V}$.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Voltage Divider</strong></td>
+                        <td>A linear circuit composed of two resistors ($R_1, R_2$) that scales high battery voltage down to a safe range ($\le 3.3\,\text{V}$).</td>
+                        <td>Allows microcontrollers with $3.3\,\text{V}$ maximum ADC inputs to sample $12\text{S}$ ($50.4\,\text{V}$) battery voltages.</td>
+                        <td>Parameter <code>BATT_VOLT_MULT</code> inside Mission Planner's Full Parameter Tree.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Shunt</strong></td>
+                        <td>An ultra-low resistance, high-precision resistor placed in series with the main battery ground or positive wire.</td>
+                        <td>Current flowing through the shunt generates a proportional micro-volt drop ($V = I \cdot R$) that is read by an operational amplifier.</td>
+                        <td>Parameter <code>BATT_AMP_PERVLT</code> converts this voltage drop into real-time Amperes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>JST-GH</strong></td>
+                        <td>A standardized, vibration-resistant, positive-locking wire connector family featuring a $1.25\,\text{mm}$ pitch.</td>
+                        <td>Replaced fragile Molex DF13 connectors across all modern Pixhawk autopilots to prevent in-flight signal disconnects.</td>
+                        <td>Used on all Durandal external ports (<code>GPS</code>, <code>TELEM</code>, <code>POWER</code>, <code>CAN</code>).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Micro OSD v2</strong></td>
+                        <td>An external processing board running an analog video overlay chip (MAX7456) driven via serial MAVLink telemetry.</td>
+                        <td>Required on enterprise flight controllers (Durandal, Cube) that omit onboard analog video chips.</td>
+                        <td>Connected directly to the <code>TELEM 1</code> port to stream HUD data onto analog FPV goggle screens.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways: Field Operations & Workshop Rules</h2>
+        <ul>
+            <li>🟢 <strong>Always Update Mission Planner First:</strong> Before plugging the Durandal into your PC for the first time, install the latest stable build of Mission Planner to ensure proper H7 USB drivers and bootloader detection profiles are registered.</li>
+            <li>🔴 <strong>Propellers 100% Removed on the Bench:</strong> Never connect a LiPo battery to configure the PM02 power monitor or test motor direction with propellers attached. Uncalibrated ESC signals or failsafe triggers can spin motors to full power instantaneously.</li>
+            <li>🟡 <strong>Plug Into POWER 1:</strong> Always seat the 6-pin power module cable firmly into <strong><code>POWER 1</code></strong>. The Durandal supports dual power modules, but primary voltage monitoring defaults to port 1.</li>
+            <li>⚠️ <strong>The Servo Rail Is Dead Without an External BEC:</strong> Remember that USB power and the PM02 do not supply voltage to the center positive rail on `MAIN OUT 1–8`. Servos require an external $5.0\,\text{V} - 6.0\,\text{V}$ BEC (from an ESC or dedicated UBEC).</li>
+            <li>🟢 <strong>Use the Machined Metal Edges for Calibration:</strong> The rigid, flat, 90-degree CNC aluminum sides of the Durandal provide true geometric datums. Rest the case squarely on each edge during 6-axis accelerometer calibration for accurate horizon offsets.</li>
+            <li>🟢 <strong>Align GPS and FC Arrows Before Compass Calibration:</strong> When performing live compass calibration, ensure the forward arrow on the GPS puck is oriented in the exact same heading as the arrow on the Durandal metal case.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Processing Core:</strong> STM32 H743IIK6 operating at $480\,\text{MHz}$ with $2\,\text{MB}$ flash and $1\,\text{MB}$ RAM.</li>
+            <li><strong>Weight Benchmark:</strong> $\approx 101.5\,\text{g}$ complete with GPS—approximately $\mathbf{24\,\text{g}}$ lighter than an equivalent Pixhawk Cube on a standard carrier board.</li>
+            <li><strong>Sensor Complement:</strong> Dual redundant IMUs (isolated), dual MS5611 barometers, and an internal magnetometer.</li>
+            <li><strong>Baud Rates:</strong> Direct USB operates at <strong><code>115200 baud</code></strong>; SiK wireless telemetry modems operate at <strong><code>57600 baud</code></strong>.</li>
+            <li><strong>PM02 Multipliers:</strong> Voltage Divider = <strong><code>18.182</code></strong>; Amperes Per Volt = <strong><code>36.364</code></strong>.</li>
+            <li><strong>Acoustic Feedback:</strong> Features an integrated piezoelectric buzzer on the PCB—no external buzzer lead is required.</li>
+            <li><strong>Analog FPV Note:</strong> Lacks an onboard MAX7456 OSD chip; analog FPV HUD requires an external Holybro Micro OSD v2 module on a TELEM port.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: How does the Holybro Durandal compare to the Pixhawk Cube family in terms of processing power, weight, and physical form factor?</div>
+            <div class="qa-answer">The Durandal integrates an STM32 H7 processor running at $480\,\text{MHz}$, matching the computational performance of the flagship Cube Orange and outperforming the older STM32 F4 ($168\,\text{MHz}$) in the Cube Black. In terms of weight, the Durandal plus GPS weighs $\approx 101.5\,\text{g}$, saving $\approx 24\,\text{g}$ compared to a Cube setup. Mechanically, it uses a monolithic CNC aluminum casing that integrates all ports onto a single chassis, eliminating the need for an external carrier board.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: Why must Mission Planner be updated to the latest version before flashing firmware onto the Durandal?</div>
+            <div class="qa-answer">The STM32 H7 architecture utilizes modern DFU bootloaders and USB Virtual COM Port (VCP) device IDs. Updating Mission Planner ensures that current Windows USB drivers are registered, allowing the software to automatically detect the Durandal board type and flash official ArduPilot H7 binaries without requiring manual board selection or driver recovery tools.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: Why won't servos move when plugged into the MAIN OUT pins if the Durandal is powered via USB or the PM02 Power Module?</div>
+            <div class="qa-answer">The center positive pin ($+5\text{V}$) of the MAIN and AUX servo rails is electrically isolated from the flight controller's internal logic power bus. This safety design prevents inductive back-EMF voltage spikes and high stall currents caused by servo motors from browning out or rebooting the primary MCU. An external $5.0\,\text{V} - 6.0\,\text{V}$ BEC must be connected directly to the output rail to energize the servos.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: What specific parameter multipliers must be entered in Mission Planner to calibrate the Holybro PM02 Power Module?</div>
+            <div class="qa-answer">In the Battery Monitor configuration screen, the <strong>Voltage Divider</strong> parameter must be set to <code>18.182</code>, and the <strong>Amperes Per Volt</strong> parameter must be set to <code>36.364</code>. These constants match the hardware resistor network and current-sensing shunt inside the PM02 module.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: How does a builder add On-Screen Display (OSD) telemetry to an analog FPV video feed when using the Durandal?</div>
+            <div class="qa-answer">Because the Durandal lacks an onboard analog MAX7456 OSD generator chip, the builder must install an external MAVLink OSD module (such as the Holybro Micro OSD v2). The module connects to the <code>TELEM 1</code> or <code>TELEM 2</code> serial port, taps into the analog camera video input, overlays real-time MAVLink telemetry onto the image, and outputs the combined signal to the video transmitter (VTX).</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Based on the hardware commissioning established in this tutorial, the logical learning progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Mastered in This Guide:</strong><br>
+                H7 processing architecture, disconnected firmware flashing, 6-axis accelerometer calibration, live dual-compass setup, and PM02 analog power monitor scaling.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Sortie 1: Maiden Flight & Field Stabilization (Next Logical Topic):</strong>
+                Physical airframe integration along the Center of Gravity (CG), assigning flight modes (<code>MANUAL</code>, <code>FBWA</code>, <code>LOITER</code>), verifying control surface direction, and conducting initial flight validation.
+            </li>
+            <li>
+                <strong>AutoTune & Dynamic Vibration Filtering:</strong>
+                Configuring in-flight <code>AUTOTUNE</code> to calculate ideal aerodynamic PID gains, followed by enabling ArduPilot's dynamic FFT-based harmonic notch filter on the H7 core to attenuate motor noise.
+            </li>
+            <li>
+                <strong>DroneCAN / UAVCAN Bus Integration:</strong>
+                Migrating from legacy I2C/UART sensors to high-speed digital CAN bus peripherals (e.g., DroneCAN GPS/compass modules) using the Durandal's dedicated <code>CAN 1</code> port.
+            </li>
+            <li>
+                <strong>FPV Telemetry & Micro OSD v2 Wiring (Optional Deeper Topic):</strong>
+                Pinout integration and configuration of the Holybro Micro OSD v2 over MAVLink serial to stream battery voltage, artificial horizon, and GPS coordinates into FPV goggles.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that the <strong>Holybro Durandal</strong> provides <strong>STM32 H7 ($480\,\text{MHz}$) compute power</strong> and dual-IMU redundancy in a rigid <strong>CNC aluminum chassis that is $\approx 24\,\text{g}$ lighter</strong> than a Pixhawk Cube on a carrier board; that <strong>firmware flashing must occur while disconnected</strong> from an active MAVLink session; that the <strong>servo rail requires an independent external BEC</strong> to operate; that calibrating the <strong>PM02 power module requires setting the voltage divider to $18.182$ and current ratio to $36.364\,\text{A/V}$</strong>; and that analog FPV requires an <strong>external MAVLink OSD module</strong>, you have mastered the foundational engineering principles of this guide and are prepared to commission the flight controller for any autonomous fixed-wing or multirotor platform.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

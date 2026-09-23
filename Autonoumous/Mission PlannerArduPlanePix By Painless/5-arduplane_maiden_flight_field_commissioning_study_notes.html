@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArduPlane Maiden Flight & Field Commissioning - Technical Study Notes</title>
+    <style>
+        :root {
+            --bg-canvas: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #38bdf8;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.75;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1060px;
+            margin: 0 auto;
+        }
+
+        header.meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid strong {
+            color: var(--text-heading);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.38rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: 0.65rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            margin: 1.6rem 0 0.8rem 0;
+        }
+
+        p {
+            margin-bottom: 1.15rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.6rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.55rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.8rem;
+            font-size: 0.96rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 175px;
+        }
+
+        .callout {
+            border-radius: 8px;
+            padding: 1.15rem 1.35rem;
+            margin: 1.35rem 0;
+            display: flex;
+            gap: 0.95rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.09);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.09);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.09);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.09);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            color: var(--accent-cyan);
+            margin: 1.3rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.35rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.25rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 PixHawk/Mission Planner/ArduPlane Build for Beginners: Maiden Flight Tips</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=4CMaGOzNnK0" target="_blank" rel="noopener noreferrer">YouTube - Painless360</a></span>
+            <span><strong>Duration:</strong> 14m 46s</span>
+            <span><strong>Instructor:</strong> Painless360</span>
+            <span><strong>Main Topic:</strong> Fixed-Wing Flight Validation, In-Flight Diagnosis, Parameter Tuning & Post-Maiden Commissioning</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial details the critical maiden sortie of an autonomous fixed-wing aircraft (featuring the sub-1-meter <strong>SonicModell/ZOHD Nano Talon</strong> equipped with a Pixhawk Purple Cube running <strong>ArduPlane</strong>). The instructor transitions from indoor bench configuration to active airfield testing, demonstrating how to systematically de-risk a first flight.
+        </p>
+        <p>
+            Rather than presenting an idealized flight, the video highlights three specific aerodynamic and parameter deficiencies encountered during flight testing: continuous altitude bleeding at cruise throttle, weak elevator climb authority, and an excessively wide turning radius in stabilized flight. The tutorial demonstrates how to diagnose these flaws in the air, connect back to Mission Planner on the bench, and apply precise parameter modifications to correct attitude leveling, servo throws, and roll limits.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. The Maiden Flight Objective & Mental Paradigm</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A disciplined, controlled flight test experiment engineered strictly to confirm aerodynamic airworthiness, sensor integrity, and autopilot stabilization loops, rather than executing aerobatics or complex autonomous missions.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> An aircraft on the bench is operating in an idealized, vibration-free, non-aerodynamic environment. The maiden flight subjects the airframe, Extended Kalman Filter (EKF), control surface linkages, and center of gravity to real aerodynamic loads, identifying subtle calibration or mechanical errors safely.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The flight is conducted within a conservative, stepped envelope: launching in stabilized mode (FBWA), checking manual control authority, testing a localized GPS orbit (Circle/Loiter), observing cruise dynamics, and landing without entering high-risk autonomous logic.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All fixed-wing, multirotor, VTOL, and commercial UAV commissioning workflows.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> Hand-launching the Nano Talon into the wind while holding the transmitter sticks neutral, allowing the autopilot's gyro-accel loop to hold the climb path cleanly.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Completed 6-axis accelerometer calibration, compass calibration, and physical control surface direction verification.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. Fly-By-Wire A (FBWA) Launch Dynamics</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> ArduPlane's baseline electronically stabilized flight mode, where the autopilot maintains vehicle attitude (pitch and roll) proportionally to transmitter stick deflection, with hard software clamping on maximum bank and pitch angles.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Hand-launching a low-airspeed fixed-wing pusher model often induces a sharp, destabilizing roll due to motor torque reaction ($\tau_{\text{motor}}$). In manual mode, human latency often results in a wing-tip stall. In FBWA, the autopilot senses roll acceleration within milliseconds and applies instantaneous counter-aileron to maintain level wings.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Releasing cyclic sticks to center ($1500\,\mu\text{s}$) commands an automatic level flight attitude. Full cyclic deflection commands maximum bank angle (governed by <code>LIM_ROLL_CD</code>). Throttle remains under direct, unassisted pilot control.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Hand-launches, bungee launches, initial maiden sorties, and calm scale cruising.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> The spotter throws the model firmly forward; the model rolls $15^\circ$ right from motor torque, but ArduPlane deflects the left aileron downward and right aileron upward instantly, leveling the aircraft as it climbs.</div>
+            <div class="concept-field"><span class="concept-label">Relationship to other concepts:</span> Acts as the intermediate layer between raw direct control (<code>MANUAL</code>) and autonomous GPS-guided navigation (<code>AUTO</code> / <code>LOITER</code>).</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Positive Angle of Attack (AoA) & Attitude Level Calibration</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The pitch offset introduced during the accelerometer level calibration (<code>Calibrate Level</code>) to ensure the airframe flies with a slightly nose-up pitch attitude relative to the physical horizon.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Symmetrical or semi-symmetrical airfoils generate zero or insufficient lift when moving through the air at exactly $0^\circ$ pitch ($L = \frac{1}{2}\rho v^2 S C_L$). An aircraft calibrated dead-level on a flat bench will hold the fuselage parallel to the ground in FBWA, causing it to bleed altitude steadily unless the pilot holds manual up-elevator.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> By propping the aircraft nose up by $+5^\circ \text{ to } +10^\circ$ (or $+3^\circ \text{ to } +5^\circ$ depending on wing incidence) when clicking <code>Calibrate Level</code> in Mission Planner, the autopilot registers that nose-up attitude as its artificial level reference datum. When flying straight in FBWA, the autopilot commands sufficient pitch to maintain continuous lift at cruise throttle.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All fixed-wing and flying-wing autonomous setups.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> Propping a small wooden block under the Nano Talon's nose wheel during Mission Planner level calibration to eliminate in-flight cruise altitude sink.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Completed 6-axis accelerometer calibration.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. In-Flight Background Auto-Trim (<code>SERVO_AUTO_TRIM</code>)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An ArduPlane background algorithm that monitors the integrator effort exerted by the PID controller to maintain level flight in FBWA and writes those offsets directly into the servo neutral parameters (<code>SERVOx_TRIM</code>).</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Eliminates the need to land, mechanically adjust pushrod clevises, or use transmitter trim switches to achieve straight-and-level flight. Prevents catastrophic pitch/roll deviations when transitioning from stabilized mode to manual mode.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> When parameter <code>SERVO_AUTO_TRIM = 1</code> is set, the autopilot evaluates PID surface deflection during stable, uncommanded FBWA flight. Every 10 seconds, it updates the stored servo center positions in non-volatile memory. When the pilot switches to <code>MANUAL</code>, the control surfaces remain deflected at the aerodynamically trimmed position.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Initial fixed-wing commissioning sorties and post-airframe modification flights.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> After flying in FBWA for two minutes, landing and inspecting Mission Planner's Servo Output page reveals Output 2 trim has migrated from $1500\,\mu\text{s}$ to $1538\,\mu\text{s}$, compensating for a mechanical V-tail offset.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Mechanically centered control surfaces and stable FBWA baseline tuning.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Parameters & Critical Specifications</h2>
+        <p>
+            Correcting aerodynamic deficiencies observed during maiden flight testing requires adjusting specific parameters inside Mission Planner's Full Parameter Tree and Mandatory Hardware tabs:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter / Setting</th>
+                        <th>Default Value</th>
+                        <th>Maiden Tuned Value</th>
+                        <th>Units / Range</th>
+                        <th>Engineering Role & Aerodynamic Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>LIM_ROLL_CD</code></td>
+                        <td><code>4500</code> ($45^\circ$)</td>
+                        <td><code>5500</code> – <code>6000</code> ($55^\circ$ – $60^\circ$)</td>
+                        <td>Centidegrees ($0 - 9000$)</td>
+                        <td>Maximum allowable aerodynamic bank angle in stabilized modes (FBWA/AUTOTUNE). Increasing allows tighter turn radii on sub-1m airframes.</td>
+                    </tr>
+                    <tr>
+                        <td><code>LIM_PITCH_MAX</code></td>
+                        <td><code>2000</code> ($20^\circ$)</td>
+                        <td><code>2500</code> – <code>3000</code> ($25^\circ$ – $30^\circ$)</td>
+                        <td>Centidegrees ($0 - 8500$)</td>
+                        <td>Maximum commanded nose-up pitch angle limit. Constrains maximum climb angle during full up-elevator deflection.</td>
+                    </tr>
+                    <tr>
+                        <td><code>LIM_PITCH_MIN</code></td>
+                        <td><code>-2000</code> ($-20^\circ$)</td>
+                        <td><code>-2000</code> – <code>-2500</code> ($-20^\circ$ – $-25^\circ$)</td>
+                        <td>Centidegrees ($-8500 - 0$)</td>
+                        <td>Maximum commanded nose-down pitch angle limit. Constrains maximum dive angle during full down-elevator deflection.</td>
+                    </tr>
+                    <tr>
+                        <td><code>SERVOx_MIN</code></td>
+                        <td><code>1100</code></td>
+                        <td><code>1000</code> (Expanded by $\approx 100\,\mu\text{s}$)</td>
+                        <td>Microseconds ($\mu\text{s}$)</td>
+                        <td>Lower physical PWM boundary sent to servo. Widening increases maximum mechanical pushrod travel without physical linkage binding.</td>
+                    </tr>
+                    <tr>
+                        <td><code>SERVOx_MAX</code></td>
+                        <td><code>1900</code></td>
+                        <td><code>2000</code> (Expanded by $\approx 100\,\mu\text{s}$)</td>
+                        <td>Microseconds ($\mu\text{s}$)</td>
+                        <td>Upper physical PWM boundary sent to servo. Widening increases maximum mechanical upward elevator deflection for climbing authority.</td>
+                    </tr>
+                    <tr>
+                        <td><code>SERVO_AUTO_TRIM</code></td>
+                        <td><code>0</code> (Disabled)</td>
+                        <td><code>1</code> (Enabled)</td>
+                        <td>Boolean (0 or 1)</td>
+                        <td>Enables real-time background migration of PID integrator effort into <code>SERVOx_TRIM</code> registers during straight-and-level FBWA cruise.</td>
+                    </tr>
+                    <tr>
+                        <td><code>RTL_ALT</code></td>
+                        <td><code>10000</code> ($100\,\text{m}$)</td>
+                        <td><code>5000</code> – <code>10000</code> ($50\,\text{m}$ – $100\,\text{m}$)</td>
+                        <td>Centimeters ($\text{cm}$)</td>
+                        <td>Safety target altitude maintained during Return-To-Launch. Must clear all local trees, power lines, and masts.</td>
+                    </tr>
+                    <tr>
+                        <td><code>WP_LOITER_RAD</code> / <code>RTL_RADIUS</code></td>
+                        <td><code>60</code></td>
+                        <td><code>30</code> – <code>45</code> (for sub-1m wings)</td>
+                        <td>Meters ($\text{m}$)</td>
+                        <td>Horizontal radius of GPS holding orbit. Compact airframes require smaller radii to avoid wandering; large gliders require larger circles.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>The Servo Rail Power Rule During Bench Testing:</strong><br>
+                When connecting the aircraft back to Mission Planner to adjust <code>SERVOx_MIN</code> and <code>SERVOx_MAX</code> in the Servo Output tab, <strong>servos will not deflect unless the LiPo flight battery is plugged in</strong>. USB provides power exclusively to the internal MCU logic and receiver rail; the servo output bus relies entirely on the ESC's 5V BEC. <strong>Always remove the propeller from the motor shaft before connecting a battery on the workbench!</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works -->
+    <section>
+        <h2>⚙️ How It Works: System Architecture & Flight Sequences</h2>
+        <p>
+            The diagram below traces the interaction between physical airfield procedures, transmitter switch allocations, autopilot control loops, and bench-level parameter modifications:
+        </p>
+
+        <pre>
+                                     [ PRE-FLIGHT AUDIT ]
+                     - CG confirmed slightly nose-down on wing balance bumps
+                     - Battery strapped securely (no axial sliding under G-loads)
+                     - Control surfaces checked (Manual: correct deflection; FBWA: opposes motion)
+                                              |
+                                              v
+                              +-------------------------------+
+                              |    HAND-LAUNCH IN FBWA MODE   |
+                              | - Throttle advanced to 70-80% |
+                              | - Firm, level throw into wind |
+                              +-------------------------------+
+                                              |
+                                              v
+               +-------------------------------------------------------------+
+               | ARDUPLANE FLIGHT STABILIZATION LOOP (Real-Time In-Flight)    |
+               |                                                             |
+               |   [Gyros & Accels] ---> [EKF State Estimation]              |
+               |                                   |                         |
+               |                                   v                         |
+               |              [Attitude Error: Desired vs. Actual]           |
+               |                                   |                         |
+               |   +-------------------------------+---------------------+   |
+               |   |                                                     |   |
+               |   v (PID Control Loops)                                 v   |
+               | [Aileron & V-Tail Deflection]              [SERVO_AUTO_TRIM=1]
+               | (Stabilizes against torque roll)            (Integrator learns
+               |                                              midpoint trim) |
+               +-------------------------------------------------------------+
+                                              |
+                                              v
+                           [ IN-FLIGHT DEFICIENCY OBSERVATIONS ]
+            ---------------------------------------------------------------------
+            1. Nose drops / Alt loss  ===> Pitch level calibrated with 0° AoA
+            2. Weak climb authority   ===> Output PWM window constrained (1100-1900µs)
+            3. Wide turn radius       ===> Bank angle clamped at 45° (LIM_ROLL_CD=4500)
+                                              |
+                                              v
+                             [ BENCH REMEDIATION PIPELINE ]
+            ---------------------------------------------------------------------
+            1. Prop nose up 5°-10°    ===> Click "Calibrate Level" in Mission Planner
+            2. LiPo on (Props OFF!)   ===> Expand Output 2 & 3 MIN/MAX (1000-2000µs)
+            3. Full Parameter Tree    ===> Set LIM_ROLL_CD = 5500 or 6000 (55°-60°)
+            4. Verify Sub-Trims       ===> Confirm SERVOx_TRIM saved flight offsets
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Field Execution & Bench Correction</h2>
+        <p>Painless360 outlines a disciplined, two-stage procedure spanning airfield launch execution and immediate post-flight workbench tuning:</p>
+
+        <h3>Stage 1: Airfield Maiden Sortie Execution</h3>
+        <ol>
+            <li>
+                <strong>Spotter Integration:</strong> Never maiden alone. The pilot's eyes must remain locked on the aircraft; the spotter monitors airspace, verifies telemetry audio alerts, tracks the flight timer, and performs the physical hand-launch.
+            </li>
+            <li>
+                <strong>Control Direction Sanity Check (The Two-Way Verification):</strong>
+                <ul>
+                    <li>In <code>MANUAL</code> mode: Verify right roll raises right aileron/lowers left; pull elevator back raises both V-tail surfaces; push right rudder deflects surfaces for right yaw.</li>
+                    <li>In <code>FBWA</code> mode: Physically lift right wing $\rightarrow$ right aileron must deflect down to oppose hand motion. Pitch nose down $\rightarrow$ both V-tails must deflect upward to raise the nose.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Hand-Launch Sequence:</strong>
+                <ul>
+                    <li>Select <code>FBWA</code> mode on the 3-position switch (Channel 8).</li>
+                    <li>Advance throttle smoothly to $70\% - 80\%$.</li>
+                    <li>Spotter executes a firm, level throw straight into the prevailing wind (never downwind or upward at a steep angle, which causes a tip stall).</li>
+                    <li>Hands remain light on cyclic sticks; allow ArduPlane to level the wings and establish a climb attitude.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Flight Envelope Exploration:</strong>
+                <ul>
+                    <li>Climb to a safe testing altitude ($\ge 50\,\text{m}$ AGL).</li>
+                    <li>Fly gentle figure-eights to evaluate bank angle clamping and roll response.</li>
+                    <li>Release cyclic sticks at cruise throttle ($50\% - 60\%$) to observe whether the aircraft maintains altitude or gradually sinks.</li>
+                    <li>Switch into <code>CIRCLE</code> mode to verify that the GPS receiver, compass heading, and navigational math successfully orbit the current point.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Recovery & Landing:</strong> Line up final approach directly into the wind in <code>FBWA</code>. Manage descent rate using throttle; flare smoothly just above ground effect and belly-land on grass.
+            </li>
+        </ol>
+
+        <h3>Stage 2: Workbench Diagnosis & Remediation Steps</h3>
+        <ol>
+            <li>
+                <strong>Correcting Altitude Bleed (Pitch Level Calibration):</strong>
+                <ul>
+                    <li>Connect the Pixhawk to Mission Planner via direct USB.</li>
+                    <li>Place a small wooden block or shim under the nose until the artificial horizon on the Flight Data HUD displays $+5^\circ \text{ to } +8^\circ$ nose-up pitch.</li>
+                    <li>Navigate to <code>Initial Setup -> Mandatory Hardware -> Accelerometer Calibration</code>.</li>
+                    <li>Click <strong>Calibrate Level</strong>.</li>
+                    <li>Remove the shim. The HUD horizon will now sit slightly nose-down while resting flat on the desk, ensuring ArduPlane commands positive Angle of Attack during level cruise flight.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Increasing Banking Agility (Parameter Adjustment):</strong>
+                <ul>
+                    <li>Navigate to <code>Config -> Full Parameter Tree</code>.</li>
+                    <li>Search for <code>LIM_ROLL_CD</code>.</li>
+                    <li>Change the value from default <code>4500</code> ($45^\circ$) to <strong><code>5500</code></strong> ($55^\circ$) or <strong><code>6000</code></strong> ($60^\circ$).</li>
+                    <li>Click <strong>Write Params</strong> to commit to non-volatile memory.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Expanding Elevator Servo Throws:</strong>
+                <ul>
+                    <li><strong>Remove the propeller completely</strong> from the motor.</li>
+                    <li>Connect the flight LiPo battery to energize the servo rail BEC.</li>
+                    <li>Navigate to <code>Initial Setup -> Mandatory Hardware -> Servo Output</code>.</li>
+                    <li>Locate Output 2 (V-tail Left) and Output 3 (V-tail Right).</li>
+                    <li>Expand the <code>Min</code> down from $1100\,\mu\text{s}$ to <strong>$1000\,\mu\text{s}$</strong> and the <code>Max</code> up from $1900\,\mu\text{s}$ to <strong>$2000\,\mu\text{s}$</strong>.</li>
+                    <li>Deflect the radio elevator stick fully up/down; verify physical throws have increased without mechanical pushrod binding or servo buzzing.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Auditing Background Learned Trims:</strong>
+                <ul>
+                    <li>In the same Servo Output window, inspect the <code>Trim</code> column for Outputs 1, 2, and 3.</li>
+                    <li>Verify that values have migrated from $1500\,\mu\text{s}$ to learned offsets (e.g., $1538\,\mu\text{s}$, $1472\,\mu\text{s}$).</li>
+                    <li>Confirm that manual transmitter digital trim tabs remain dead-center ($0$).</li>
+                </ul>
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands / Code -->
+    <section>
+        <h2>💻 Parameter Configurations & Flight Modes</h2>
+
+        <h3>3-Position Flight Mode Channel Allocation (Channel 8)</h3>
+        <p>The standard safety-critical flight mode allocation for a maiden sortie:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Switch Position</th>
+                        <th>PWM Pulse Window</th>
+                        <th>Assigned Mode</th>
+                        <th>Flight Control Behavior & Safety Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Position 1 (Low)</strong></td>
+                        <td>$\approx 1000\,\mu\text{s} - 1230\,\mu\text{s}$</td>
+                        <td><code>MANUAL</code></td>
+                        <td><strong>Emergency Override Escape Hatch.</strong> Direct pass-through from receiver to servos. All internal stabilization, IMU calculations, and rate limits are completely bypassed. Use if control surfaces oscillate violently or orientation is wrong.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Position 2 (Mid)</strong></td>
+                        <td>$\approx 1231\,\mu\text{s} - 1620\,\mu\text{s}$</td>
+                        <td><code>FBWA</code></td>
+                        <td><strong>Primary Test & Launch Mode.</strong> Active self-leveling with bank and pitch angle limits. Deflecting sticks commands desired bank/pitch angles; releasing sticks returns vehicle to level flight.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Position 3 (High)</strong></td>
+                        <td>$\approx 1621\,\mu\text{s} - 2000\,\mu\text{s}$</td>
+                        <td><code>CIRCLE</code></td>
+                        <td><strong>Hands-Off Evaluation Mode.</strong> Aircraft navigates a continuous circular GPS holding pattern around the coordinate where the mode was triggered, locking altitude via barometer. Verifies navigation math.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Full Parameter Key-Value Adjustments</h3>
+        <pre><code># ==============================================================================
+# ARDUPLANE MAIDEN FLIGHT REMEDIATION PARAMETERS
+# ==============================================================================
+
+# Increase maximum allowable bank angle from 45 deg to 55-60 deg (Sub-1m models)
+LIM_ROLL_CD = 5500          # Centidegrees (55.0 degrees max bank)
+
+# Maximum and Minimum commanded pitch limits
+LIM_PITCH_MAX = 2500        # Centidegrees (25.0 degrees max climb angle)
+LIM_PITCH_MIN = -2000       # Centidegrees (-20.0 degrees max dive angle)
+
+# Enable automatic background trim learning in level flight
+SERVO_AUTO_TRIM = 1         # 1 = Enabled (Writes learned trims to EEPROM every 10s)
+
+# Autonomous return-to-launch target altitude and holding orbit radius
+RTL_ALT = 5000              # Altitude in centimeters (50 meters AGL)
+WP_LOITER_RAD = 35          # Orbit radius in meters (tightened for small wings)
+
+# Disable uninstalled differential airspeed pitot sensor to prevent arming lockout
+ARSPD_TYPE = 0              # 0 = Disabled
+ARSPD_ENABLE = 0            # 0 = Disabled</code></pre>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Solutions (Maiden Flight Troubleshooting)</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Problem</th>
+                        <th>Underlying Root Cause</th>
+                        <th>How to Identify Problem</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Vehicle Sinks / Loses Altitude at Cruise</strong></td>
+                        <td>Artificial horizon was calibrated with the fuselage sitting dead-level on a flat desk ($0^\circ$ pitch), resulting in insufficient wing Angle of Attack (AoA).</td>
+                        <td>In FBWA cruise at $60\%$ throttle, the aircraft gradually sinks unless continuous up-elevator stick pressure is applied.</td>
+                        <td>Prop up the aircraft nose by $+5^\circ \text{ to } +10^\circ$ on the bench and execute <code>Calibrate Level</code> in Mission Planner.</td>
+                        <td>Establishes a nose-up attitude datum as "zero level", forcing the autopilot to maintain positive wing lift ($L \propto C_L$) during straight-and-level flight.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weak Elevator Authority / Inability to Climb</strong></td>
+                        <td>Software servo travel endpoints (<code>SERVOx_MIN/MAX</code>) in ArduPlane constrain mechanical pushrod throw below aerodynamic requirements.</td>
+                        <td>Full backward stick deflection produces minimal upward control surface movement; aircraft climbs sluggishly even at full throttle.</td>
+                        <td>Energize the servo rail via LiPo battery (props off) and expand output endpoints (e.g., from $1100/1900\,\mu\text{s}$ to $1000/2000\,\mu\text{s}$).</td>
+                        <td>Expands the microsecond pulse window transmitted to the servo, allowing full mechanical horn throw and increased aerodynamic deflection.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Excessively Large Turning Circle in FBWA</strong></td>
+                        <td>Maximum roll angle parameter <code>LIM_ROLL_CD</code> is clamped too low ($45^\circ$) for a fast, short-wingspan airframe.</td>
+                        <td>Holding full roll stick deflection produces a wide, sweeping turn that requires excessive airspace to reverse direction.</td>
+                        <td>Navigate to Full Parameter Tree and raise <code>LIM_ROLL_CD</code> from <code>4500</code> to <code>5500</code> or <code>6000</code>.</td>
+                        <td>Allows the autopilot's cascaded attitude controller to bank the aircraft more steeply ($55^\circ - 60^\circ$), tightening the horizontal turn radius ($R = \frac{v^2}{g \tan\phi}$).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pre-Arm Failure: <code>PreArm: Check Airspeed</code></strong></td>
+                        <td>Pitot tube airspeed sensor parameter is enabled in firmware, but no physical differential pressure sensor is connected.</td>
+                        <td>Red annunciator text on Mission Planner HUD; buzzer emits low rejection chime upon attempting to arm.</td>
+                        <td>In Full Parameter Tree, set <code>ARSPD_TYPE = 0</code> and <code>ARSPD_ENABLE = 0</code>; click Write Params.</td>
+                        <td>Instructs the EKF to rely on GPS ground speed and synthetic aerodynamic calculations rather than reading an open, floating analog/I2C sensor port.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Erratic Circling in CIRCLE / LOITER ("Toilet-Bowling")</strong></td>
+                        <td>Magnetometer experiencing electromagnetic interference (EMI) from battery leads or uncalibrated indoor magnetic hard-iron offsets.</td>
+                        <td>Aircraft enters expanding, accelerating spiral orbits instead of holding a clean, centered GPS circular track.</td>
+                        <td>Perform an outdoor Live Compass Calibration at the airfield away from reinforced concrete, cars, and metallic fences.</td>
+                        <td>Re-triangulates clean magnetic North offsets without distortion from indoor structural rebar or workshop high-current power supplies.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect: The Closed-Loop Aerodynamic Architecture</h2>
+        <p>
+            The physical sensors, control loops, and bench adjustments form a continuous, interdependent cyber-physical feedback loop:
+        </p>
+
+        <pre>
+[ Airframe Angle of Attack ]             [ Pilot Desired Attitude ]
+      (Fuselage AoA)                           (Stick Input)
+            |                                        |
+            v                                        v
+  [ Dynamic Lift & Drag ]                  [ Clamped by Limits ]
+ (Generates physical G's)             (LIM_ROLL_CD / LIM_PITCH_MAX)
+            |                                        |
+            v                                        v
+  [ IMU Accelerometers ] ---------------> [ Cascaded PID Controller ]
+  (Detects tilt and rates)               (Attitude error compensation)
+            |                                        |
+            v                                        v
+  [ EKF Horizon Reference ]               [ PWM Servo Commands ]
+  (Nose-up level datum offset)         (Bounded by SERVOx_MIN / MAX)
+            |                                        |
+            +-------------------+--------------------+
+                                |
+                                v
+               [ SERVO_AUTO_TRIM Integrator ]
+               (Learns mechanical aerodynamic bias)
+                                |
+                                v
+               [ Neutral Centering Migrated ]
+               (Safe transitions to MANUAL mode)
+        </pre>
+
+        <div class="callout info">
+            <span class="callout-icon">💡</span>
+            <div>
+                <strong>Component Interdependence & Failure Cascades:</strong><br>
+                If the <strong>Angle of Attack offset</strong> is neglected, the <strong>PID controller</strong> must constantly saturate its integrator loop to hold up-elevator. If <strong>SERVO_AUTO_TRIM</strong> is active under this condition, it will continuously pull the resting servo trim upward. If the pilot then switches into <strong>MANUAL</strong> mode at high speed, the aircraft will pitch violently upward into an aerodynamic loop or high-speed stall. Every adjustment must balance both manual and stabilized flight regimes.
+            </div>
+        </div>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Why It Matters</th>
+                        <th>Practical Flight Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>FBWA (Fly-By-Wire A)</strong></td>
+                        <td>An augmented stabilization flight mode where cyclic stick inputs command target bank and pitch angles directly.</td>
+                        <td>Prevents pilot-induced aerodynamic stalls and spin divergence during launches and initial sorties.</td>
+                        <td>The default launch mode recommended by ArduPlane engineers to neutralize motor torque-roll.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Angle of Attack (AoA)</strong></td>
+                        <td>The acute angle between the chord line of the wing airfoil and the oncoming relative wind vector.</td>
+                        <td>Directly determines lift generation ($L \propto C_L$); insufficient AoA causes gradual altitude loss in level cruise.</td>
+                        <td>Compensated on the bench by propping the aircraft nose up $+5^\circ$ to $+10^\circ$ during level calibration.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LIM_ROLL_CD</strong></td>
+                        <td>ArduPlane parameter specifying the maximum allowable bank angle in stabilized modes, measured in centidegrees ($1^\circ = 100\,\text{CD}$).</td>
+                        <td>Clamps how steeply the autopilot will bank the aircraft during full stick deflection.</td>
+                        <td>Raised from $4500$ ($45^\circ$) to $5500$ ($55^\circ$) to allow tight turning on the sub-1m Nano Talon.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SERVO_AUTO_TRIM</strong></td>
+                        <td>An automated software routine that samples steady-state PID integrator effort and updates physical servo trims (<code>SERVOx_TRIM</code>).</td>
+                        <td>Eliminates manual transmitter sub-trim adjustments and ensures smooth mode transitions to <code>MANUAL</code>.</td>
+                        <td>Activated by setting parameter to <code>1</code>; writes updated offsets to non-volatile EEPROM every 10 seconds.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Centidegrees</strong></td>
+                        <td>A unit of angular measurement equal to one-hundredth of an angular degree ($0.01^\circ$).</td>
+                        <td>Used across ArduPilot's parameter tree to store high-precision angular limits as integers rather than floating-point values.</td>
+                        <td>A bank limit of $60^\circ$ is written into Mission Planner as $60 \times 100 = 6000\,\text{CD}$.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AutoTune</strong></td>
+                        <td>A flight mode that executes real-time system identification algorithms to tune roll, pitch, and yaw PID gains automatically.</td>
+                        <td>Replaces tedious manual trial-and-error PID tuning with mathematical response modeling.</td>
+                        <td>Executed by rocking sticks rapidly left/right and up/down $\ge 20$ times in smooth air.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Toilet-Bowling</strong></td>
+                        <td>An oscillatory flight divergence where an autonomous aircraft circles in expanding, accelerating spirals during GPS holding.</td>
+                        <td>Indicates compromised heading data, risking loss of control or flyaway.</td>
+                        <td>Caused by uncalibrated compass offsets or electromagnetic interference from high-current motor leads.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways: Field Operations & Workshop Rules</h2>
+        <ul>
+            <li>🟢 <strong>Never Maiden Alone:</strong> Always fly with an experienced spotter. The pilot focuses exclusively on airframe dynamics; the spotter tracks flight time, monitors telemetry audio alerts, and checks airspace.</li>
+            <li>🟢 <strong>Launch Exclusively in FBWA:</strong> Hand-launch the aircraft in <code>Fly-By-Wire A</code> mode at $70\% - 80\%$ throttle. The autopilot will automatically suppress motor torque-roll and establish a stable climb.</li>
+            <li>🔴 <strong>Maintain MANUAL as the Escape Hatch:</strong> Always assign pure <code>MANUAL</code> to Switch Position 1. If PID loop oscillations or sensor faults threaten the aircraft, flipping to manual bypasses all autopilot intervention immediately.</li>
+            <li>🟡 <strong>Always Prop the Nose Up for Level Calibration:</strong> When executing <code>Calibrate Level</code> in Mission Planner, shim the nose up $+5^\circ \text{ to } +10^\circ$ relative to the flat desk to prevent altitude bleed during cruise flight.</li>
+            <li>⚠️ <strong>Remove Props When Tuning Servo Outputs:</strong> Modifying <code>SERVOx_MIN/MAX</code> endpoints requires LiPo battery power on the servo rail. Always remove propellers from the motor shaft before workbench testing.</li>
+            <li>🟢 <strong>Capture As-Built Photographic Logs:</strong> Once the model is mechanically trimmed and validated, photograph all internal carrier board pinouts, receiver antenna routing, and ESC wire sequences for future reference.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>The Maiden Trinity Switch:</strong> Position 1 = <code>MANUAL</code> (Override); Position 2 = <code>FBWA</code> (Stabilized Launch/Flight); Position 3 = <code>CIRCLE</code> (GPS Hold).</li>
+            <li><strong>Correcting Altitude Sinks:</strong> Prop nose up $+5^\circ \text{ to } +10^\circ$ on the bench $\rightarrow$ click <code>Calibrate Level</code> in Mission Planner.</li>
+            <li><strong>Tightening Turning Radius:</strong> Increase parameter <code>LIM_ROLL_CD</code> from <code>4500</code> ($45^\circ$) to <code>5500</code> ($55^\circ$) or <code>6000</code> ($60^\circ$).</li>
+            <li><strong>Increasing Elevator Throw:</strong> Expand <code>SERVOx_MIN</code> and <code>SERVOx_MAX</code> on Outputs 2 & 3 by $\approx 100\,\mu\text{s}$ with LiPo connected (props removed).</li>
+            <li><strong>Background Auto-Trim:</strong> Setting <code>SERVO_AUTO_TRIM = 1</code> migrates flight PID integrator effort into <code>SERVOx_TRIM</code> every 10 seconds during level FBWA flight.</li>
+            <li><strong>Airspeed Pre-Arm Bypass:</strong> If no pitot tube is installed, set <code>ARSPD_TYPE = 0</code> and <code>ARSPD_ENABLE = 0</code> to eliminate pre-arm lockout.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why should an autonomous fixed-wing model be hand-launched in FBWA mode rather than MANUAL mode?</div>
+            <div class="qa-answer">Single-motor pusher configurations generate substantial motor torque reaction ($\tau = P / \omega$) at launch throttle, which tends to roll the aircraft sharply along its longitudinal axis. Because hand-launches begin at near-stall airspeeds with minimal control surface authority, human pilot reaction time is often too slow to prevent a tip stall. In FBWA, the autopilot senses roll acceleration within milliseconds and applies corrective aileron automatically to hold wings level.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: What causes an aircraft to slowly lose altitude during FBWA cruise flight, and how is it resolved?</div>
+            <div class="qa-answer">It is caused by calibrating the accelerometer level datum with the fuselage resting perfectly horizontal on a flat bench. At $0^\circ$ pitch attitude, fixed-wing airfoils produce insufficient lift at cruise airspeed. The issue is resolved by propping the nose up by $+5^\circ \text{ to } +10^\circ$ using a shim and clicking <code>Calibrate Level</code> in Mission Planner, teaching the flight controller to hold a positive Angle of Attack (AoA) during straight-and-level flight.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: Why must the LiPo battery be connected to test expanded servo throws on the bench, and what critical safety precaution is mandatory?</div>
+            <div class="qa-answer">The Pixhawk's MAIN and AUX servo output rails are electrically isolated from the USB $+5\text{V}$ power bus to protect the internal MCU from inductive servo back-EMF spikes. The servo rail receives power exclusively from the ESC's 5V BEC, which requires the main flight battery to operate. The mandatory safety precaution is to <strong>remove the propeller completely</strong> from the motor shaft before connecting the battery on the bench.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: What is the mechanical consequence of enabling <code>SERVO_AUTO_TRIM = 1</code> during flight?</div>
+            <div class="qa-answer">During straight-and-level flight in FBWA mode, the autopilot monitors the PID controller's integrator term (the steady-state deflection needed to maintain wings level). Every 10 seconds, it writes those offsets directly into the <code>SERVOx_TRIM</code> parameters in EEPROM. When the pilot subsequently switches into <code>MANUAL</code> mode, the surfaces remain deflected at the learned trim positions, ensuring the aircraft tracks straight without manual transmitter trim tab input.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: How does increasing <code>LIM_ROLL_CD</code> from 4500 to 5500 alter the aircraft's turning characteristics?</div>
+            <div class="qa-answer">Parameter <code>LIM_ROLL_CD</code> represents the maximum bank angle limit in centidegrees. Increasing it from $4500$ ($45^\circ$) to $5500$ ($55^\circ$) allows the autopilot to bank the airframe $10^\circ$ more steeply during full lateral stick deflection. By the physics of coordinated horizontal turns ($R = \frac{v^2}{g \tan\phi}$), a higher bank angle $\phi$ significantly reduces the turning radius $R$, providing tighter maneuvering for compact airframes.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Based on the curriculum presented in this tutorial, the logical progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Mastered in This Guide:</strong><br>
+                Field safety protocols, FBWA launch dynamics, post-maiden parameter remediation, and attitude level calibration.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Sortie 2: The AutoTune Routine (Next Logical Topic):</strong>
+                Assigning <code>AUTOTUNE</code> to the flight mode switch, launching in FBWA, climbing to altitude, and performing full-deflection cyclic stick twitches (20–25 cycles on roll, 20–25 cycles on pitch) to let ArduPlane calculate optimal aerodynamic PID gains ($P, I, D, FF$).
+            </li>
+            <li>
+                <strong>Failsafe & Return-To-Launch (RTL) Validation:</strong>
+                Configuring and flight-testing high-altitude RTL, setting <code>RTL_ALT</code> and <code>WP_LOITER_RAD</code>, testing simulated transmitter power-down failsafes, and observing automatic holding patterns.
+            </li>
+            <li>
+                <strong>Autonomous Launch Mode (<code>LAUNCH</code>):</strong>
+                Configuring automated hand-launch logic (delayed motor spool-up until throw acceleration is detected by internal IMUs).
+            </li>
+            <li>
+                <strong>Intermediate Systems Integration (Optional Deeper Topics):</strong>
+                Wiring and configuring analog/digital FPV systems, integrating the Holybro Micro OSD v2 via MAVLink, and planning 3D waypoint survey grids in Mission Planner.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that a maiden flight is a <strong>disciplined diagnostic test</strong> rather than an aerobatics show; that <strong>launching in FBWA</strong> protects against motor torque-roll while <strong>MANUAL</strong> serves as your emergency override; that fixed-wing aircraft require a <strong>$+5^\circ \text{ to } +10^\circ$ nose-up level calibration</strong> to prevent cruise altitude bleeding; that tightening turn radii requires expanding <strong><code>LIM_ROLL_CD</code></strong>; and that <strong><code>SERVO_AUTO_TRIM</code></strong> dynamically captures learned aerodynamic midpoints so switching to manual mode remains completely stable, you have mastered the core engineering principles of this guide and are fully prepared to maiden and tune your autonomous aircraft safely.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
