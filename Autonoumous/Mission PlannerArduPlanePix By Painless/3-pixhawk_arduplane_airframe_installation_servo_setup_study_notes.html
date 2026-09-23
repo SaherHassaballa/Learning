@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixhawk & ArduPlane: Airframe Installation & Servo Setup - Technical Study Notes</title>
+    <style>
+        :root {
+            --bg-canvas: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #3b82f6;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid span strong {
+            color: var(--text-main);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        p {
+            margin-bottom: 1.1rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Concept Block Cards */
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 145px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.1rem 1.3rem;
+            margin: 1.25rem 0;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.08);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.4rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.85rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Diagrams & Code Blocks */
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin: 1.2rem 0;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        /* Q&A Cards */
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        /* Final Synthesis Box */
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 PixHawk / Mission Planner / ArduPlane Build for Beginners: Installing into a 'plane</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=9Jgh6vXsx2E" target="_blank" rel="noopener noreferrer">YouTube - Painless360</a></span>
+            <span><strong>Duration:</strong> 20m 01s</span>
+            <span><strong>Instructor:</strong> Painless360</span>
+            <span><strong>Main Topic:</strong> Physical Airframe Packaging, Servo Bus Power Architecture, Internal Aerodynamic Mixing, and Two-Stage Stabilization Verification</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial advances from open-bench commissioning to physical integration inside an aircraft airframe (demonstrated on a <strong>SonicModell / ZOHD Nano Talon</strong> V-tail pusher). It bridges the gap between software calibration and physical aerodynamic actuation, demonstrating that the commissioning protocol remains scale-invariant—whether applied to an 860mm backpack foam flyer or a 4-meter, 25kg commercial survey drone.
+        </p>
+        <p>
+            The video addresses critical physical space constraints (swapping the standard Cube Black for a compact <strong>Purple Cube</strong> on a Mini Carrier Board), routing high-voltage vs. low-voltage wiring, solving the servo rail power isolation boundary, configuring ArduPlane's internal aerodynamic mixer matrix (without radio-side mixing), executing the mandatory two-stage control surface deflection and stabilization checks, establishing emergency flight mode safety profiles, and configuring background autonomous servo auto-trimming.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. The Two-Stage Control Surface Validation Protocol</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A mandatory dual-verification procedure requiring the builder to test manual pilot stick response in <code>MANUAL</code> mode, followed by physical airframe attitude disturbance testing in <code>FBWA</code> (Fly-By-Wire A) mode.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Manual stick response proves only that the transmitter can deflect control horns. It does <em>not</em> prove that ArduPlane's internal PID stabilization loops will push surfaces in the correct direction. If the autopilot's corrective feedback is inverted, the aircraft will violently diverge upon engaging stabilization, resulting in an unrecoverable crash within seconds of launch.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> In <code>MANUAL</code>, the pilot deflects gimbals and observes physical throws. Then, switching to <code>FBWA</code>, the pilot manually rolls and pitches the fuselage by hand. The autopilot's attitude estimation must command control surfaces to oppose hand motion (e.g., rolling the right wing up must force the right aileron upward to push the wing back down toward level).</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Every autonomous fixed-wing, VTOL, and elevon aircraft commissioning workflow prior to maiden flight.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> When the right wing is lifted by hand, the right aileron must rise. If it drops, it will aerodynamically increase lift on the already high wing, compounding the roll into an immediate ground strike.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Completed 6-axis accelerometer calibration and baseline radio calibration.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. ArduPlane Internal Mixing Architecture (SERVOx_FUNCTION)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An internal software routing matrix that maps raw 4-channel pilot demands (Aileron, Elevator, Throttle, Rudder) to designated physical output pins (<code>Output 1–8</code>) while mathematically combining axes for V-tails, elevons, flaperons, or differential thrust.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> To strictly prevent transmitter-side mixing. The handheld radio must output pure single-axis commands so the autopilot receives uncorrupted demand setpoints. ArduPlane handles all aerodynamic mixing internally.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> By setting <code>SERVO1_FUNCTION = 4</code> (Aileron), <code>SERVO2_FUNCTION = 79</code> (V-Tail Left), and <code>SERVO3_FUNCTION = 80</code> (V-Tail Right), ArduPlane applies its dynamic mixer algorithms directly before outputting PWM pulses to the servo pins. Surface inversions are handled exclusively by checking the <strong>Reverse</strong> box in Mission Planner's Servo Output menu.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All fixed-wing and hybrid VTOL platforms governed by ArduPilot.</div>
+            <div class="concept-field"><span class="concept-label">Cardinal Rule:</span> <strong>Never reverse a channel on your transmitter to fix a backwards surface.</strong> Reversing the channel on the radio inverts manual stick control relative to autopilot stabilization logic, guaranteeing an instant crash.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Dynamic In-Flight Auto-Trim (SERVO_AUTO_TRIM)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An autonomous background parameter routine in ArduPlane (<code>SERVO_AUTO_TRIM = 1</code>) that samples the integrator effort of the stabilization loops during straight-and-level cruise and permanently writes those offsets into the servo neutral registers (<code>SERVOx_TRIM</code>).</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Trimming a physical fixed-wing aircraft manually using transmitter trim rockers is hazardous, tedious, and alters the transmitter's neutral pulse datum away from $1500\,\mu\text{s}$. <code>SERVO_AUTO_TRIM</code> automates aerodynamic trim in the background without human stick intervention.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> While cruising in <code>FBWA</code> with sticks centered, ArduPlane monitors how much control deflection the PID loops apply to keep wings level. Every 10 seconds, it saves these offsets into the neutral sub-trims. When the pilot toggles back to <code>MANUAL</code> mode, the aircraft remains trimmed for level flight.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Fixed-wing maiden sorties and post-airframe modification test flights.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. AHRS Level Cruise Pitch Bias (+3° to +5° Nose-Up Offset)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The practice of calibrating the artificial horizon (AHRS Level) with the aircraft's nose propped slightly upward ($+3^\circ$ to $+5^\circ$, or up to $+8^\circ$ on small foam wings) relative to a flat workbench.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Fixed-wing aircraft require a positive wing Angle of Attack (AoA) to generate lift ($L = \frac{1}{2}\rho V^2 S C_L$). If the autopilot is leveled with the fuselage sitting dead flat on a table, it will command $0^\circ$ pitch in autonomous cruise, causing the aircraft to steadily lose altitude unless the pilot constantly pulls back on the elevator stick.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Placing a shim under the nose during <code>Calibrate Level</code> forces the autopilot to recognize that slight nose-up attitude as $0^\circ$ cruise pitch. In flight, the aircraft cruises straight and level at neutral throttle.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Hardware Architecture & Packaging Trade-offs</h2>
+        <p>Airframe internal volume dictates autopilot form factor. The table below details the engineering trade-offs between standard Cube housings and compact mini-carrier platforms:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hardware Dimension / Spec</th>
+                        <th>Standard Cube Black / Orange</th>
+                        <th>Low-Profile Purple Cube + Mini Carrier Board</th>
+                        <th>Operational Impact on Aircraft Build</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Physical Footprint</strong></td>
+                        <td>$81.5 \times 50.0 \times 15.5\,\text{mm}$ (Standard carrier)</td>
+                        <td>$50.0 \times 40.0 \times 12.0\,\text{mm}$ (Mini carrier)</td>
+                        <td>Purple Cube fits into sub-1m foam fuselages (ZOHD Nano Talon) and compact nose bays.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IMU Redundancy</strong></td>
+                        <td>Triple redundant IMUs (gyroscopes & accelerometers)</td>
+                        <td>Single IMU architecture</td>
+                        <td>Purple Cube lacks multi-IMU sensor voting and failover; lower sensor fault tolerance.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internal Vibration Damping</strong></td>
+                        <td>Foam-suspended internal IMU core</td>
+                        <td>Hard-mounted directly to carrier PCB</td>
+                        <td>Requires high-quality external silicone or 3M foam vibration damping pads under the board.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internal Thermal Chamber</strong></td>
+                        <td>Resistor heating loop ($45^\circ\text{C}$ stabilization)</td>
+                        <td>No internal IMU heater</td>
+                        <td>Cold ambient temperatures induce slight IMU sensor drift; requires outdoor warm-up.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Power Management Ports</strong></td>
+                        <td>Dual isolated power ports (<code>POWER 1</code> and <code>POWER 2</code>)</td>
+                        <td>Two compact Molex ports (<code>PM1</code> and <code>PM2</code>)</td>
+                        <td><strong>Critical Trap:</strong> Power Module must be plugged into <strong><code>POWER 1</code> (PM1)</strong> for voltage/current sensing.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Primary Application</strong></td>
+                        <td>Heavy commercial survey UAVs, BVLOS multi-hour wings</td>
+                        <td>Weight-critical sport wings, park flyers, micro-airframes</td>
+                        <td>Reduces weight and volume while executing the identical 32-bit ArduPlane code.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout danger">
+            <span class="callout-icon">🔴</span>
+            <div>
+                <strong>The Servo Rail Power Isolation Boundary:</strong><br>
+                Connecting the USB cable or flight battery through the Power Module energizes the STM32 microcontroller, internal IMUs, and the <code>RC IN</code> receiver pins. <strong>It does not deliver power to the center positive rail (+5V) of MAIN OUT (1–8).</strong> Servos will remain limp and unresponsive on the bench until an external 5V BEC (typically the red wire from the ESC's throttle cable on Output 8, or a dedicated UBEC) energizes the output rail. This isolation is intentional: it protects the flight computer from inductive voltage spikes and stall-current brownouts caused by servos.
+            </div>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>The Power Module Bay Trap (Mini Carrier Board):</strong><br>
+                On dual-power carrier boards, the Power Module lead must be plugged into <strong><code>POWER 1</code> (PM1)</strong>. Plugging into <code>PM2</code> without specific advanced parameter reassignment will power the board, but Mission Planner's HUD will read $0.0\,\text{V}$ and $0.0\,\text{A}$, disabling low-voltage failsafes.
+            </div>
+        </div>
+
+        <div class="callout tip">
+            <span class="callout-icon">🟢</span>
+            <div>
+                <strong>The Side-Fuselage USB Service Port:</strong><br>
+                An autopilot requires routine USB access for tuning and DataFlash log retrieval. Rather than removing wings or unbolting hatches between flights, use an X-Acto hobby knife to cut a clean rectangular service port through the foam side wall directly aligned with the micro-USB connector on the carrier board.
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works (System Architecture & Diagrams) -->
+    <section>
+        <h2>⚙️ System Architecture & Airframe Packaging Flow</h2>
+        <p>The diagram below illustrates the physical packaging, data buses, and isolated power distribution inside the fixed-wing airframe:</p>
+
+        <pre>
+                                     +-----------------------------------------+
+                                     |        EXTERNAL GPS / COMPASS PUCK      |
+                                     | (Mounted on upper fuselage spine clear  |
+                                     |  of high-current battery and motor wires)|
+                                     +--------------------+--------------------+
+                                                          |
+                                                          v (UART Serial + I2C Bus)
++---------------------------------------------------------------------------------------------------------------+
+| UPPER FUSELAGE BAY (Center Wing Spar Location - Close to Aircraft CG)                                         |
+|                                                                                                               |
+|   [ Side USB Cutout ] ===(Micro-USB Cable)===> [ SIDE USB PORT ]                                              |
+|                                                       |                                                       |
+|                               +-----------------------+-----------------------+                               |
+|                               |   PIXHAWK PURPLE CUBE & MINI CARRIER BOARD    |                               |
+|                               |     (Centerline arrow pointing forward)       |                               |
+|                               +-----------------------+-----------------------+                               |
+|                                                       |                                                       |
+|                               [ POWER 1 Port ]        | [ MAIN OUT Header (Pins 1-8) ]                        |
+|                                      ^                |   - Pin 1 (S): Right/Left Ailerons (via Y-Lead)       |
+|                                      |                |   - Pin 2 (S): V-Tail Left Servo                      |
+|                                      |                |   - Pin 3 (S): V-Tail Right Servo                     |
+|                                      |                |   - Pin 8 (S + BEC 5V + Gnd): Motor Throttle ESC      |
+|                                      |                +-------------------+-----------------------------------+
+|                                      |                                    |
+|   +----------------------------------+------------------------------------+
+|   | (Internal Through-Hole Wiring)   |
+|   v                                  v
+| LOWER BELLY BAY                                                                                               |
+|                                                                                                               |
+|   [ LiPo Flight Battery ] =====> [ Power Module (PM02) ] =====(Raw High-Amperage DC)=====> [ Brushless ESC ]  |
+|                                         |                                                        |            |
+|                                         +====(Clean 5.3V Logic Power + Current Sense)            |            |
+|                                              into POWER 1 Port above                             |            |
+|                                                                                                  |            |
+|   [ S.Bus Radio Receiver ] <=========(Digital RC Lead from RC IN above)                          |            |
+|                                                                                                  |            |
+|   [ Piezo Diagnostic Buzzer ] <======(Audio Lead from BUZZER Port above)                        |            |
+|                                                                                                  |            |
+|   * Note: BEC 5V power from ESC routes up to Pin 8 center rail to energize Servos 1, 2, and 3 +--+            |
++---------------------------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Airframe Commissioning Sequence</h2>
+        <p>Follow this exact chronological sequence to install the electronics and calibrate surfaces safely:</p>
+
+        <h3>Phase 1: Mechanical Packaging & Forward Orientation</h3>
+        <ol>
+            <li>
+                <strong>Verify Autopilot Orientation:</strong> Mount the Pixhawk Purple Cube and mini carrier board flat in the center cabin near the vehicle Center of Gravity (CG). <strong>Ensure the molded forward arrow points toward the nose of the plane.</strong>
+            </li>
+            <li>
+                <strong>Mount the GPS/Compass Puck:</strong> Affix the external GPS puck to the top exterior of the fuselage, ensuring its forward arrow is parallel to the Pixhawk. Keep it elevated and separated from high-current motor wiring to avoid electromagnetic interference (EMI).
+            </li>
+            <li>
+                <strong>Route Lower Bay Peripherals:</strong> Secure the Power Module to the fuselage side wall. Mount the ESC along the lower centerline for airflow. Mount the receiver and piezo buzzer toward the front/rear compartments.
+            </li>
+            <li>
+                <strong>Cut USB Access Port:</strong> Align an X-Acto blade with the micro-USB connector on the mini carrier board and cut a clean service window through the foam fuselage wall.
+            </li>
+        </ol>
+
+        <h3>Phase 2: Wiring Documentation (The Builder's Crib Sheet)</h3>
+        <ol start="5">
+            <li>
+                <strong>Document Output Header Connections:</strong> Before closing hatches, write down the exact physical servo assignments:
+                <ul>
+                    <li><code>Output 1</code>: Ailerons (routed via dual-servo Y-harness)</li>
+                    <li><code>Output 2</code>: V-Tail Left Servo (or Elevator on conventional tail)</li>
+                    <li><code>Output 3</code>: V-Tail Right Servo (or Rudder on conventional tail)</li>
+                    <li><code>Output 8</code>: Motor Electronic Speed Controller (ESC)</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Connect Receiver to RC IN:</strong> Wire the serial receiver lead (S.Bus / CRSF) to the <code>RC IN</code> port on the carrier board.
+            </li>
+        </ol>
+
+        <h3>Phase 3: Mission Planner Servo Output Routing (Props Removed!)</h3>
+        <ol start="7">
+            <li>
+                <strong>Absolute Safety Rule: Remove Propeller!</strong> Completely remove the propeller from the motor shaft before connecting batteries or configuring outputs on the bench.
+            </li>
+            <li>
+                <strong>Connect via USB (No Battery Yet):</strong> Plug the USB cable through the service port into your PC. Launch Mission Planner and click <strong>CONNECT</strong> ($115200\text{ baud}$).
+            </li>
+            <li>
+                <strong>Assign Servo Functions:</strong>
+                Navigate to: <code>Setup -> Mandatory Hardware -> Servo Output</code>.
+                Assign functions matching your crib sheet:
+                <ul>
+                    <li><strong>Output 1:</strong> Select <code>Aileron</code> (Value: <code>4</code>)</li>
+                    <li><strong>Output 2:</strong> Select <code>VtailLeft</code> (Value: <code>79</code>) — <em>or <code>Elevator</code> (19)</em></li>
+                    <li><strong>Output 3:</strong> Select <code>VtailRight</code> (Value: <code>80</code>) — <em>or <code>Rudder</code> (21)</em></li>
+                    <li><strong>Output 8:</strong> Select <code>Throttle</code> (Value: <code>70</code>)</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Subtrim Re-Center & Radio Recalibration:</strong>
+                Power on the radio transmitter. In your transmitter's subtrim menu, fine-tune Channel 1, 2, and 4 so their resting values sit at exactly $1500\,\mu\text{s}$ in Mission Planner's <code>Radio Calibration</code> tab. Re-click <strong>Calibrate Radio</strong>, sweep all sticks to register endpoints, center controls, and click <strong>Click when Done</strong>.
+            </li>
+        </ol>
+
+        <h3>Phase 4: Bench Live Testing & Direction Reversal</h3>
+        <ol start="11">
+            <li>
+                <strong>Connect Flight Battery:</strong> Connect the LiPo battery to energize the ESC BEC and power the servo rail. You will hear the Pixhawk's initialization musical chime.
+            </li>
+            <li>
+                <strong>Stage 1: Validate Manual Stick Response (Mode: MANUAL):</strong>
+                Switch transmitter to <code>MANUAL</code> mode. Deflect sticks and observe surfaces:
+                <ul>
+                    <li><strong>Push Roll Right:</strong> Right aileron must rise; left aileron must drop.</li>
+                    <li><strong>Pull Pitch Back (Climb):</strong> Both V-tail surfaces must deflect upward.</li>
+                    <li><strong>Push Yaw Right:</strong> Left V-tail must deflect upward; right V-tail must deflect downward.</li>
+                </ul>
+                <div class="callout danger">
+                    <span class="callout-icon">🔴</span>
+                    <div>
+                        <strong>How to Fix Backwards Surfaces:</strong><br>
+                        If a control surface deflects in reverse, check the <strong>Reverse</strong> checkbox for that specific output pin in Mission Planner's <code>Servo Output</code> menu (e.g., check Reverse on Output 1 for ailerons or Output 2 for V-tail left). <strong>DO NOT reverse the channel in your handheld transmitter!</strong>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <strong>Stage 2: Validate Autopilot Stabilization (Mode: FBWA):</strong>
+                Switch transmitter to <code>FBWA</code> (Fly-By-Wire A) mode. Pick up the aircraft and physically perturb it by hand:
+                <ul>
+                    <li><strong>Physically Roll Right Wing Up:</strong> Right aileron must rise (acting to push the wing down); left aileron must drop.</li>
+                    <li><strong>Physically Pitch Nose Down:</strong> Both V-tail surfaces must deflect upward (acting to pull the nose back up).</li>
+                    <li><strong>Physically Pitch Nose Up:</strong> Both V-tail surfaces must deflect downward (acting to push the nose back down).</li>
+                </ul>
+                <div class="callout warning">
+                    <span class="callout-icon">⚠️</span>
+                    <div>
+                        <strong>Stabilization Reversal Check:</strong> The control surfaces must actively oppose your hand motion to return the model to level. If the surfaces deflect in the direction of your movement, the aircraft will enter an uncontrollable dive or roll on launch.
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <h3>Phase 5: Parameter Tweaks & Flight Readiness</h3>
+        <ol start="14">
+            <li>
+                <strong>AHRS Level Cruise Pitch Calibration:</strong>
+                Place the airframe on the workbench. Prop the nose up with a block so the fuselage sits at approximately <strong>$+3^\circ\text{ to }+5^\circ$ nose-up attitude</strong>.
+                Navigate to: <code>Setup -> Mandatory Hardware -> Accel Calibration</code>. Click <strong>Calibrate Level</strong>.
+            </li>
+            <li>
+                <strong>Resolve Pre-Arm Airspeed Fault:</strong>
+                Attempting to arm without a pitot tube triggers <code>PreArm: Check Airspeed</code>.
+                Go to: <code>Config -> Full Parameter List</code>.
+                Search for <code>ARSPD_TYPE</code> and set it to <strong><code>0</code></strong> (Disabled).
+                Search for <code>ARSPD_ENABLE</code> and set it to <strong><code>0</code></strong>.
+                Click <strong>Write Params</strong>.
+            </li>
+            <li>
+                <strong>Enable Background Auto-Trim:</strong>
+                In <code>Full Parameter List</code>, search for <strong><code>SERVO_AUTO_TRIM</code></strong>.
+                Change value from <code>0</code> to <strong><code>1</code></strong> (Enabled). Click <strong>Write Params</strong>.
+            </li>
+            <li>
+                <strong>Assign Maiden Flight Modes:</strong>
+                In <code>Initial Setup -> Mandatory Hardware -> Flight Modes</code>, configure Channel 8:
+                <ul>
+                    <li>Position 1: <strong><code>MANUAL</code></strong> (Emergency override)</li>
+                    <li>Position 2: <strong><code>FBWA</code></strong> (Primary launch & cruising mode)</li>
+                    <li>Position 3: <strong><code>CIRCLE</code></strong> (GPS loiter orbit check)</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Center of Gravity (CG) Physical Verification:</strong>
+                Install the flight battery into its final strapped position. Balance the aircraft underneath the wings on the manufacturer's molded CG bumps. Ensure the airframe balances level or slightly nose-down (never tail-heavy!).
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands, Parameters & Settings -->
+    <section>
+        <h2>💻 Parameters, Mixer Registers & Output Values</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter Identifier</th>
+                        <th>Standard / Tuned Value</th>
+                        <th>Functional Engineering Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><code>SERVO1_FUNCTION</code></strong></td>
+                        <td><code>4</code> (Aileron)</td>
+                        <td>Assigns physical Output 1 header to ArduPlane roll axis demand.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVO2_FUNCTION</code></strong></td>
+                        <td><code>79</code> (VtailLeft)</td>
+                        <td>Assigns physical Output 2 header to V-tail left aerodynamic mixing logic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVO3_FUNCTION</code></strong></td>
+                        <td><code>80</code> (VtailRight)</td>
+                        <td>Assigns physical Output 3 header to V-tail right aerodynamic mixing logic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVO8_FUNCTION</code></strong></td>
+                        <td><code>70</code> (Throttle)</td>
+                        <td>Assigns physical Output 8 header to motor propulsion ESC demand.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_REVERSED</code></strong></td>
+                        <td><code>0</code> (Normal) or <code>1</code> (Inverted)</td>
+                        <td>Inverts output PWM polarity at the hardware output pin without affecting radio logic.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVOx_TRIM</code></strong></td>
+                        <td>$1500\,\mu\text{s}$ nominal</td>
+                        <td>Neutral pulse center value for physical servos. Automatically updated by <code>SERVO_AUTO_TRIM</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>ARSPD_TYPE</code></strong></td>
+                        <td><code>0</code> (Disabled)</td>
+                        <td>Disables physical pitot tube sensor requirement, bypassing <code>PreArm: Check Airspeed</code> error.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>ARSPD_ENABLE</code></strong></td>
+                        <td><code>0</code> (Disabled)</td>
+                        <td>Completely disables airspeed calculation pipeline when flying without pitot hardware.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>SERVO_AUTO_TRIM</code></strong></td>
+                        <td><code>1</code> (Enabled)</td>
+                        <td>Directs ArduPlane to record PID integrator effort in level cruise and write trims into <code>SERVOx_TRIM</code> every 10s.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>BATT_MONITOR</code></strong></td>
+                        <td><code>4</code> (Analog Voltage & Current)</td>
+                        <td>Enables voltage divider and current shunt sensing through the Power Module on <code>POWER 1</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Engineering Solutions</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Fault Symptom</th>
+                        <th>Root Cause</th>
+                        <th>Diagnostic Identification</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pre-Arm Failure:<br><code>PreArm: Check Airspeed</code></strong></td>
+                        <td>Airspeed sensor parameter left enabled (`ARSPD_TYPE > 0`) on an airframe without a pitot tube.</td>
+                        <td>Buzzer emits low reject tone; red banner displayed on Mission Planner Flight Data HUD.</td>
+                        <td>Set <code>ARSPD_TYPE = 0</code> and <code>ARSPD_ENABLE = 0</code> in Full Parameter List; click Write Params.</td>
+                        <td>Tells ArduPlane's EKF to estimate airspeed synthetically using ground speed and wind estimation rather than reading missing pitot voltage.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Control Surface Moves Backwards in Manual</strong></td>
+                        <td>Servo horn geometry or linkage polarity inverted relative to default PWM pulse sweep.</td>
+                        <td>Pushing aileron stick right deflects right aileron down instead of up.</td>
+                        <td>Check the <strong>Reverse</strong> checkbox for that specific output in Mission Planner's <code>Servo Output</code> menu.</td>
+                        <td>Inverts output pin pulse width without altering the transmitter's raw stick intent, keeping stabilization loops synchronized.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mission Planner HUD Reads 0.0V / 0.0A with Battery Connected</strong></td>
+                        <td>Power Module 6-pin cable plugged into secondary <code>PM2</code> bay instead of <code>POWER 1</code> (PM1).</td>
+                        <td>Autopilot boots up on battery power, but voltage gauge on HUD remains blank or reads 0V.</td>
+                        <td>Power down and move the Molex connector firmly into the <strong><code>POWER 1</code> (PM1)</strong> socket.</td>
+                        <td>ArduPilot default analog ADC channels sample primary battery voltage and current exclusively from the <code>POWER 1</code> pin bus.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Aircraft Sinks / Loses Altitude in FBWA Cruise</strong></td>
+                        <td>AHRS Level calibrated with the aircraft sitting dead flat on the workbench (zero wing AoA).</td>
+                        <td>In flight, pilot must hold constant back-pressure on elevator stick during straight cruise.</td>
+                        <td>Prop nose up $+3^\circ\text{ to }+5^\circ$ with a block on the bench; re-click <strong>Calibrate Level</strong>.</td>
+                        <td>Forces the autopilot's pitch datum to maintain positive wing Angle of Attack, generating sufficient aerodynamic lift at cruise speed.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Servos Unresponsive with USB Connected</strong></td>
+                        <td>The center positive rail (+5V) of MAIN OUT 1–8 is electrically isolated from USB logic power.</td>
+                        <td>Receiver operates, HUD reflects stick motion, but servo arms remain completely limp.</td>
+                        <td>Connect the flight battery to energize the ESC's 5V BEC on Output 8 (or wire an external UBEC).</td>
+                        <td>Supplies independent 5V power to the servo bus while maintaining optical and galvanic isolation for the flight computer MCU.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect (The Pre-Flight Validation Chain)</h2>
+        <p>The airframe integration sequence creates an unbroken chain of physical and logical validations:</p>
+
+        <pre>
+[Mechanical Installation & CG Balance]
+                 |
+                 v
+[Direct USB + Service Port Cutout] =====> [Document Wire Crib Sheet (Out 1-8)]
+                                                          |
+                                                          v
+                                          [Mission Planner Servo Output Matrix]
+                                           - Output 1: Aileron (4)
+                                           - Output 2: VtailLeft (79)
+                                           - Output 3: VtailRight (80)
+                                           - Output 8: Throttle (70)
+                                                          |
+                                                          v
+                                          [Connect Battery: Energize BEC Rail]
+                                                          |
+     +----------------------------------------------------+----------------------------------------------------+
+     |                                                                                                         |
+     v                                                                                                         v
+[Stage 1: Manual Stick Check]                                                             [Stage 2: FBWA Stabilization Check]
+ - Deflect gimbals in MANUAL mode                                                          - Tilt airframe by hand in FBWA mode
+ - Reverse inverted surfaces in GCS                                                        - Surfaces actively OPPOSE motion
+ - NEVER reverse in transmitter!                                                           - Restores model toward level
+     |                                                                                                         |
+     +----------------------------------------------------+----------------------------------------------------+
+                                                          |
+                                                          v
+                                          [Apply Operational Parameter Tuning]
+                                           - ARSPD_TYPE = 0 (Clear pre-arm error)
+                                           - SERVO_AUTO_TRIM = 1 (Autonomous cruise trim)
+                                           - Calibrate Level with +5° Nose-Up Bias
+                                                          |
+                                                          v
+                                          [Radio Failsafe Simulation: Props Off]
+                                           - Turn off transmitter -> Motor cuts instantly
+                                                          |
+                                                          v
+                                           [READY FOR MAIDEN TEST FLIGHT]
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Context & Practical Importance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Angle of Attack (AoA)</strong></td>
+                        <td>The acute angle between the wing's chord line and the oncoming relative wind vector ($\alpha$).</td>
+                        <td>Governs lift generation; why calibrating AHRS level with $+3^\circ$ to $+5^\circ$ nose-up bias is essential for straight-and-level cruise.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FBWA (Fly-By-Wire A)</strong></td>
+                        <td>An ArduPlane flight mode offering gyro-stabilized self-leveling with bank and pitch angle limits.</td>
+                        <td>The primary mode used for hand launches, cruise evaluation, and checking autopilot self-correction authority.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>V-Tail Mixing</strong></td>
+                        <td>An aerodynamic arrangement where two angled ruddervators combine pitch and yaw control.</td>
+                        <td>Calculated dynamically inside ArduPlane (<code>VtailLeft</code> and <code>VtailRight</code>) without requiring radio-side mixing.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BEC (Battery Eliminator Circuit)</strong></td>
+                        <td>A DC-DC regulator integrated into the ESC stepping down high battery voltage to $+5.0\text{V}$.</td>
+                        <td>Powers the isolated servo positive rail on the Pixhawk via the Output 8 throttle cable lead.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SERVO_AUTO_TRIM</strong></td>
+                        <td>An ArduPlane parameter enabling automated background subtrim tuning in flight.</td>
+                        <td>Records integrator effort in level cruise and writes offsets to <code>SERVOx_TRIM</code>, ensuring hands-off manual flight.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Center of Gravity (CG)</strong></td>
+                        <td>The single theoretical balance point along the longitudinal axis where total aircraft weight concentrates.</td>
+                        <td>Autopilots cannot compensate for an excessively tail-heavy aircraft; must balance level or slightly nose-down on molded wing bumps.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways</h2>
+        <ul>
+            <li>🔴 <strong>Never Reverse Channels in the Radio:</strong> Reverse backwards surfaces exclusively in Mission Planner's <code>Servo Output</code> menu. Reversing in the radio causes autopilot stabilization loops to fight pilot stick commands, causing a crash.</li>
+            <li>🔴 <strong>Absolute Workshop Propeller Safety:</strong> Never connect a flight battery to configure servos or troubleshoot arming with a propeller installed on the motor shaft.</li>
+            <li>🟢 <strong>Cut a Dedicated USB Service Port:</strong> Slice a small access window in the foam fuselage side aligned with the micro-USB connector. You will connect to Mission Planner repeatedly during flight commissioning.</li>
+            <li>🟡 <strong>Plug Power Module into PM1:</strong> On dual-power carrier boards, always connect the Power Module harness to <code>POWER 1</code> (PM1) to ensure the HUD reads active battery voltage and current.</li>
+            <li>⚠️ <strong>The Two-Stage Surface Verification is Mandatory:</strong> Always verify that sticks deflect surfaces correctly in <code>MANUAL</code>, and that tilting the fuselage in <code>FBWA</code> forces surfaces to fight your motion.</li>
+            <li>🟢 <strong>Calibrate Level with a Nose-Up Bias:</strong> Prop the nose up $+3^\circ$ to $+5^\circ$ when clicking <code>Calibrate Level</code> so the aircraft maintains altitude in autonomous cruise.</li>
+            <li>🟢 <strong>Enable Auto-Trim:</strong> Set <code>SERVO_AUTO_TRIM = 1</code> before maiden flight so the autopilot automatically trims the aircraft for level flight.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Forward Arrow Alignment:</strong> The arrow on the top of the Pixhawk Cube and the external GPS puck must point forward toward the aircraft nose.</li>
+            <li><strong>Isolated Servo Rail:</strong> USB powers the CPU, sensors, and receiver; the servo rail center positive pin (+5V) is completely dead until energized by the ESC BEC.</li>
+            <li><strong>Servo Output Routing:</strong> Typical Nano Talon routing: Output 1 = Aileron (4), Output 2 = VtailLeft (79), Output 3 = VtailRight (80), Output 8 = Throttle (70).</li>
+            <li><strong>Airspeed Error Bypass:</strong> Disable missing pitot tube pre-arm errors by setting <code>ARSPD_TYPE = 0</code> and <code>ARSPD_ENABLE = 0</code>.</li>
+            <li><strong>Emergency Override Mode:</strong> Always assign <code>MANUAL</code> to Position 1 of your flight mode switch as an instant bailout if stabilization gains induce oscillations.</li>
+            <li><strong>Center of Gravity:</strong> Always check physical balance on wing CG bumps with the flight battery strapped in its operational position.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers (Self-Assessment) -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why must control surface reversing be configured in Mission Planner rather than on the radio transmitter?</div>
+            <div class="qa-answer">If you reverse a channel on your transmitter, you alter only the human command signal sent to ArduPlane. The autopilot's internal stabilization algorithm (which senses physical vehicle rotation via gyroscopes) still pushes the control surface in the old direction. In stabilized modes (FBWA), the autopilot will deflect the surface backwards, amplify uncommanded vehicle motion, and cause an immediate crash. Reversing inside Mission Planner's Servo Output menu inverts the actual pin output, synchronizing both pilot commands and autopilot corrections.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: Why do connected servos remain completely motionless when the Pixhawk is powered via USB?</div>
+            <div class="qa-answer">The Pixhawk features physical electrical power isolation between its internal logic bus and the servo rail header. USB power energizes only the STM32 MCU, internal IMUs, and the <code>RC IN</code> receiver pins. The center positive pin (+5V) along MAIN OUT 1–8 receives zero voltage from USB to protect sensitive processor circuitry from servo back-EMF spikes and brownouts. An external 5V BEC (from the ESC throttle wire on Output 8) must be connected to power the servos.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: How do you verify that autopilot stabilization is correcting in the proper direction in FBWA mode?</div>
+            <div class="qa-answer">Switch the aircraft into <code>FBWA</code> mode and physically perturb the airframe by hand. Control surfaces must actively fight your motion to restore level flight: lifting the right wing must raise the right aileron (pushing the wing back down), and pitching the nose down must deflect elevators/ruddervators upward (pulling the nose back up).</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: Why should the artificial horizon level calibration be performed with the aircraft nose propped up +3° to +5°?</div>
+            <div class="qa-answer">Fixed-wing aerofoils require a positive Angle of Attack (AoA) relative to oncoming airflow to generate aerodynamic lift. If an aircraft is calibrated dead flat on a table, the autopilot will hold the fuselage perfectly level in autonomous cruise, generating insufficient lift and causing the plane to steadily lose altitude unless manual elevator pressure is held.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: What does the parameter SERVO_AUTO_TRIM = 1 accomplish during flight?</div>
+            <div class="qa-answer">It instructs ArduPlane to sample the integrator effort of its PID stabilization loops during straight-and-level <code>FBWA</code> cruise. Every 10 seconds, it writes those trim offsets into the servo neutral registers (<code>SERVOx_TRIM</code>). When the pilot switches back to <code>MANUAL</code> mode, the aircraft remains trimmed for hands-off level flight without manual trim tab adjustments.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Following Painless360's beginner ArduPlane curriculum, the logical learning progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Verified in This Video:</strong><br>
+                Airframe mechanical packaging, servo output routing, two-stage surface deflection checks, level pitch bias, and auto-trim configuration.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Maiden Flight & Field Protocol (Immediate Next Step):</strong>
+                Executing hand-launches in <code>FBWA</code> mode, validating manual override bailouts, observing in-flight pitch trim, and landing safely.
+            </li>
+            <li>
+                <strong>AutoTune In-Flight Parameter Tuning:</strong>
+                Setting up <code>AUTOTUNE</code> flight mode to automatically calculate ideal roll and pitch aerodynamic PID gains ($P, I, D$ and $FF$) tailored to your exact airframe.
+            </li>
+            <li>
+                <strong>Autonomous Navigation & Failsafe Execution:</strong>
+                Testing high-altitude Return-To-Launch (<code>RTL</code>), configuring loiter radius limits (`WP_LOITER_RAD`), and executing 3D waypoint missions.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that <strong>reversing backwards surfaces must occur in Mission Planner's Servo Output menu</strong> (never on the radio), that the <strong>two-stage control surface verification</strong> is non-negotiable before flight, that the <strong>servo rail requires an external BEC</strong> to operate, that the <strong>nose must be propped up $+3^\circ$ to $+5^\circ$ during level calibration</strong> to generate cruise lift, and that <strong><code>SERVO_AUTO_TRIM = 1</code></strong> automates aerodynamic trimming in flight, you have mastered the engineering foundations of this tutorial and your aircraft is airworthy and ready for its maiden sortie.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

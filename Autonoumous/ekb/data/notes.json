@@ -1,0 +1,128 @@
+{
+  "siteTitle": "Engineering Knowledge Base",
+  "siteSubtitle": "My Personal Technical Study Library",
+  "categories": [
+    {
+      "id": "drones",
+      "name": "Drones & UAV",
+      "icon": "🚁",
+      "subcategories": [
+        { "id": "ardupilot", "name": "ArduPilot" },
+        { "id": "mission-planner", "name": "Mission Planner" },
+        { "id": "px4", "name": "PX4" },
+        { "id": "mavlink", "name": "MAVLink" }
+      ]
+    },
+    {
+      "id": "embedded",
+      "name": "Embedded Systems",
+      "icon": "🔌",
+      "subcategories": [
+        { "id": "microcontrollers", "name": "Microcontrollers" },
+        { "id": "protocols", "name": "Communication Protocols" },
+        { "id": "rtos", "name": "RTOS" },
+        { "id": "drivers", "name": "Drivers" }
+      ]
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics",
+      "icon": "🤖",
+      "subcategories": [
+        { "id": "ros2", "name": "ROS2" },
+        { "id": "gazebo", "name": "Gazebo" },
+        { "id": "slam", "name": "SLAM" }
+      ]
+    },
+    {
+      "id": "control",
+      "name": "Control Systems",
+      "icon": "🎛️",
+      "subcategories": [
+        { "id": "pid", "name": "PID" },
+        { "id": "state-space", "name": "State Space" },
+        { "id": "flight-dynamics", "name": "Flight Dynamics" }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "id": "ardupilot-intro",
+      "title": "Introduction to ArduPilot",
+      "category": "drones",
+      "subcategory": "ardupilot",
+      "file": "notes/drones/ardupilot/introduction.html",
+      "level": "Beginner",
+      "readingTime": 12,
+      "tags": ["ArduPilot", "Firmware", "Overview"],
+      "description": "What ArduPilot is, the supported vehicle types, and how the firmware fits into a flight stack.",
+      "dateAdded": "2026-09-01",
+      "sourceVideo": ""
+    },
+    {
+      "id": "ardupilot-calibration",
+      "title": "Sensor Calibration",
+      "category": "drones",
+      "subcategory": "ardupilot",
+      "file": "notes/drones/ardupilot/calibration.html",
+      "level": "Practical",
+      "readingTime": 15,
+      "tags": ["ArduPilot", "Calibration", "IMU", "Compass", "Sensors"],
+      "description": "Step-by-step accelerometer, compass, and radio calibration workflow before first flight.",
+      "dateAdded": "2026-09-03",
+      "sourceVideo": ""
+    },
+    {
+      "id": "mission-planner-overview",
+      "title": "Mission Planner Overview",
+      "category": "drones",
+      "subcategory": "mission-planner",
+      "file": "notes/drones/mission-planner/overview.html",
+      "level": "Beginner",
+      "readingTime": 10,
+      "tags": ["Mission Planner", "GCS", "Overview"],
+      "description": "Tour of the Mission Planner interface: flight data, flight plan, and configuration tabs.",
+      "dateAdded": "2026-09-05",
+      "sourceVideo": ""
+    },
+    {
+      "id": "i2c-protocol",
+      "title": "I2C Protocol Fundamentals",
+      "category": "embedded",
+      "subcategory": "protocols",
+      "file": "notes/embedded/protocols/i2c.html",
+      "level": "Intermediate",
+      "readingTime": 14,
+      "tags": ["I2C", "Protocols", "Embedded"],
+      "description": "How the I2C bus addresses devices, clock stretching, and common pitfalls in multi-sensor setups.",
+      "dateAdded": "2026-09-08",
+      "sourceVideo": ""
+    },
+    {
+      "id": "ros2-nodes",
+      "title": "ROS2 Nodes & Topics",
+      "category": "robotics",
+      "subcategory": "ros2",
+      "file": "notes/robotics/ros2/nodes.html",
+      "level": "Intermediate",
+      "readingTime": 18,
+      "tags": ["ROS2", "Nodes", "Topics", "Publish/Subscribe"],
+      "description": "The publish/subscribe model in ROS2, node lifecycles, and a minimal Python node example.",
+      "dateAdded": "2026-09-10",
+      "sourceVideo": ""
+    },
+    {
+      "id": "pid-controller",
+      "title": "PID Controller Basics",
+      "category": "control",
+      "subcategory": "pid",
+      "file": "notes/control/pid/pid-controller.html",
+      "level": "Intermediate",
+      "readingTime": 16,
+      "tags": ["PID", "Control Systems", "Tuning"],
+      "description": "Proportional, integral, and derivative terms explained with a flight-controller tuning example.",
+      "dateAdded": "2026-09-12",
+      "sourceVideo": ""
+    }
+  ]
+}

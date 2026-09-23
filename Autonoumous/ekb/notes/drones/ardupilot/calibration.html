@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sensor Calibration</title>
+<style>
+  body { font-family: 'Segoe UI', Roboto, sans-serif; background: #1c1f26; color: #e6e6e6; margin: 0; padding: 40px 24px; }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 28px; }
+  .step { background: #262b36; border-radius: 10px; padding: 18px 20px; margin: 16px 0; border-left: 4px solid #4fc3f7; }
+  .step h3 { margin: 0 0 8px; color: #4fc3f7; font-size: 16px; }
+  .step p { margin: 0; color: #c7ccd4; font-size: 14.5px; }
+  .warn { background: #3a2a1e; border-left: 4px solid #ffb74d; border-radius: 10px; padding: 14px 18px; margin: 24px 0; color: #ffd699; font-size: 14px; }
+  .checklist { list-style: none; padding: 0; font-size: 14.5px; }
+  .checklist li::before { content: "☐ "; color: #4fc3f7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sensor Calibration Workflow</h1>
+  <p style="color:#9aa3b0;">Complete this before any first flight or after replacing/moving the flight controller.</p>
+
+  <div class="step">
+    <h3>1. Accelerometer calibration</h3>
+    <p>Level the vehicle on each of its six faces when prompted by the ground station. This
+    maps the raw accelerometer output to a known gravity vector in each orientation.</p>
+  </div>
+
+  <div class="step">
+    <h3>2. Compass calibration</h3>
+    <p>Rotate the vehicle slowly through all axes to sample the magnetic field in every
+    direction. Do this away from metal objects, cars, and rebar-reinforced floors.</p>
+  </div>
+
+  <div class="step">
+    <h3>3. Radio calibration</h3>
+    <p>Move every stick and switch on the transmitter to its full range so the autopilot
+    learns your PWM endpoints and trims.</p>
+  </div>
+
+  <div class="warn">
+    ⚠ Recalibrate the compass any time you change your GPS/compass module's position, or if you
+    see erratic yaw behavior on the bench (spinning heading with the vehicle still).
+  </div>
+
+  <h3 style="color:#e6e6e6;">Pre-flight checklist</h3>
+  <ul class="checklist">
+    <li>Accelerometer calibrated on all 6 orientations</li>
+    <li>Compass calibrated away from interference</li>
+    <li>Radio endpoints and trims calibrated</li>
+    <li>Battery voltage/current monitor configured</li>
+    <li>Failsafe behavior set (RTL or land)</li>
+  </ul>
+</div>
+</body>
+</html>

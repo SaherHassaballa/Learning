@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ROS2 Nodes & Topics</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 760px; margin: 36px auto; padding: 0 20px; color: #202124; }
+  h1 { color: #6a1b9a; }
+  h2 { color: #6a1b9a; }
+  pre { background: #1e1e2e; color: #d4d4f7; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 13.5px; }
+  .flow { display: flex; align-items: center; gap: 10px; margin: 20px 0; font-size: 14px; flex-wrap: wrap; }
+  .flow .box { background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px; padding: 10px 14px; }
+  .flow .arrow { color: #8e24aa; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>ROS2 Nodes & Topics</h1>
+  <p>ROS2 applications are built from small, independent processes called <b>nodes</b> that
+  communicate over named channels called <b>topics</b>, using a publish/subscribe pattern.</p>
+
+  <div class="flow">
+    <div class="box">Node A<br><small>publisher</small></div>
+    <div class="arrow">→ /sensor_data →</div>
+    <div class="box">Node B<br><small>subscriber</small></div>
+  </div>
+
+  <h2>Minimal publisher node (Python)</h2>
+  <pre>import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float32
+
+class AltitudePublisher(Node):
+    def __init__(self):
+        super().__init__('altitude_publisher')
+        self.pub = self.create_publisher(Float32, 'altitude', 10)
+        self.timer = self.create_timer(0.5, self.tick)
+
+    def tick(self):
+        msg = Float32()
+        msg.data = 12.4
+        self.pub.publish(msg)
+
+rclpy.init()
+rclpy.spin(AltitudePublisher())</pre>
+
+  <h2>Why the pub/sub model matters for robotics</h2>
+  <p>Sensor drivers, state estimators, planners, and controllers can all run as separate nodes
+  — potentially on different machines — and stay decoupled. A planner node never needs to know
+  which specific sensor produced a pose estimate, only that it can subscribe to a topic that
+  publishes one.</p>
+
+  <h2>Node lifecycle basics</h2>
+  <ul>
+    <li><b>Unconfigured</b> → node exists but hasn't allocated resources</li>
+    <li><b>Inactive</b> → configured, but not yet processing data</li>
+    <li><b>Active</b> → fully running, publishing/subscribing</li>
+    <li><b>Finalized</b> → shutting down, resources released</li>
+  </ul>
+</body>
+</html>
