@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes: Mission Planner Setup Wizard & 10-Minute Drone Commissioning</title>
+    <style>
+        :root {
+            --bg-canvas: #090d16;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #3b82f6;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.75;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid span strong {
+            color: var(--text-main);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            margin: 1.6rem 0 0.8rem 0;
+        }
+
+        p {
+            margin-bottom: 1.15rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.6rem;
+            margin-bottom: 1.3rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.55rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Concept Block Cards */
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.6rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 155px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.2rem 1.4rem;
+            margin: 1.3rem 0;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.08);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Diagrams & Code Blocks */
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            color: var(--accent-cyan);
+            margin: 1.3rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        /* Q&A Cards */
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem 1.5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        /* Final Synthesis Box */
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.9rem;
+            font-size: 1.25rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 Mission Planner Wizard | Setup Your Drone in 10 Minutes</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=DSvxxPaG1RY" target="_blank" rel="noopener noreferrer">YouTube - The Drone Dojo</a></span>
+            <span><strong>Duration:</strong> 9m 06s</span>
+            <span><strong>Instructor:</strong> The Drone Dojo</span>
+            <span><strong>Main Topic:</strong> ArduCopter Initial Setup Wizard, Sensor Calibrations, and Baseline Safety Configuration</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial demonstrates the rapid initial commissioning of an autonomous quadcopter running <strong>ArduCopter</strong> on a Pixhawk-class flight controller using the integrated <strong>Mission Planner Setup Wizard</strong>. 
+        </p>
+        <p>
+            Operating over a pre-established wireless telemetry link, the instructor bypasses disjointed individual hardware menus and executes a streamlined, 16-step calibration pipeline. The video systematically walks through multirotor airframe geometry definition, 6-axis accelerometer reference frame sampling, 3D live magnetometer (compass) offset mapping, battery telemetry scaling, radio control (RC) pulse endpoint boundary registration ($1000\,\mu\text{s} - 2000\,\mu\text{s}$), baseline flight mode assignment (`Stabilize` and `RTL`), and pre-arm safety interlock evaluations.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. The Automated Configuration Pipeline (Mission Planner Wizard)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A guided linear software wizard embedded in Mission Planner (`Initial Setup -> Wizard`) that aggregates mandatory hardware configurations and sensor calibrations into an unbroken sequence.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Prior to initial flight, an uncalibrated autopilot has undefined mathematical offsets for gravity, magnetic North, and stick travel. The wizard ensures no foundational safety calibration is omitted before writing parameters to the flight controller's onboard non-volatile memory (EEPROM/FRAM).</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The wizard queries the flight controller over MAVLink, prompts the operator through physical vehicle manipulations, verifies sensor tolerance boundaries, calculates offset and scaling matrices, and commits the resulting calibration parameters sequentially.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> During bench commissioning of newly built or freshly flashed multirotors, planes, and rovers running ArduPilot.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> Rather than manually hunting for `FRAME_CLASS`, `INS_ACCOFFS`, `COMPASS_OFS`, and `RC3_MIN` inside the Full Parameter List, the wizard prompts you to place the drone in 6 positions, spin it in a sphere, and sweep your sticks, writing those parameters automatically.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Established MAVLink connection (via USB or wireless SiK telemetry radios) and flashed ArduCopter firmware.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. 6-Axis Orthogonal Gravity Vector Calibration</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A mathematical sampling procedure where the flight controller measures the static acceleration vector of Earth's gravity ($1g \approx 9.81\,\text{m/s}^2$) across all six orthogonal spatial orientations.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> MEMS accelerometers suffer from manufacturing zero-bias errors and sensitivity variations along their physical $X$, $Y$, and $Z$ axes. Without calibration, the Extended Kalman Filter (EKF) cannot accurately compute horizontal level or distinguish dynamic aircraft acceleration from gravitational pull.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The vehicle is placed in six orthogonal positions: Level, Left side, Right side, Nose Down, Nose Up, and Inverted. In each position, gravity acts purely along one primary axis ($\pm 1g$). ArduPilot solves a linear system of equations to extract scale factors and zero-biases ($X_{\text{offset}}, Y_{\text{offset}}, Z_{\text{offset}}$).</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> In the Inertial Measurement Unit (IMU) attitude estimation pipeline of all aerial robotics.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> When resting level, the $Z$-axis accelerometer reads $+9.81\,\text{m/s}^2$ while $X$ and $Y$ read $0.0\,\text{m/s}^2$. When placed nose down, the $X$-axis registers $-9.81\,\text{m/s}^2$.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> A stable, vibration-free workbench and rigid flight controller mounting.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Live 3D Spherical Magnetometer Calibration</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A live sampling process where the drone is tumbled through all three rotational spatial axes ($360^\circ$ Roll, Pitch, and Yaw) while the software measures surrounding magnetic field vectors.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Earth's weak geomagnetic field ($0.25 - 0.65\,\text{Gauss}$) is distorted by structural drone components: ferromagnetic screws/spacers (**Hard-Iron distortion**) and induced magnetic fields from conductive materials (**Soft-Iron distortion**). Calibration cancels these distortions.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> As the vehicle is tumbled in the air, the compass collects 3D magnetic coordinates $[B_x, B_y, B_z]$. In a clean environment, these points form a perfect sphere centered at $(0,0,0)$. Hard-iron offsets shift the sphere's origin; soft-iron effects distort it into an ellipsoid. ArduPilot fits the collected points to a sphere and computes corrective transformation matrices.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> In primary directional heading estimation to prevent GPS "toilet-bowling" during autonomous position-hold modes (`Loiter`, `RTL`, `Auto`).</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Wireless telemetry connection (to avoid cable tangling) and freedom from nearby ferrous metals.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. Normalized PWM Radio Control Endpoint Mapping</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The procedure of sweeping all transmitter control sticks, switches, and potentiometers to register their physical travel limits as microsecond pulse widths.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Different RC transmitters (FrSky, RadioMaster, Spektrum, Futaba) output non-identical pulse ranges (e.g., one transmitter outputs $988 - 2012\,\mu\text{s}$, while another outputs $1004 - 1996\,\mu\text{s}$). ArduPilot must establish the true low endpoint, neutral center, and high endpoint for every channel.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The operator moves gimbals into all four diagonal corners and sweeps all knobs/switches. Mission Planner tracks the peak minimum and maximum microsecond values, setting:
+            $$ \text{Min} \approx 1000\,\mu\text{s}, \quad \text{Trim} \approx 1500\,\mu\text{s}, \quad \text{Max} \approx 2000\,\mu\text{s} $$
+            </div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All multirotor and fixed-wing receiver input channels (`RC1_MIN` through `RC8_MAX`).</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Bound RC transmitter and receiver, powered and transmitting to Pixhawk `RC IN`.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details & Configuration Parameters</h2>
+        <p>
+            During the 16 steps of the wizard, Mission Planner writes values directly to ArduCopter configuration registers. The table below outlines the critical parameters modified by each wizard stage:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Wizard Stage</th>
+                        <th>Governing ArduPilot Parameter</th>
+                        <th>Configured Value / Range</th>
+                        <th>Engineering Role & Functional Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Frame Type</strong></td>
+                        <td><code>FRAME_TYPE</code></td>
+                        <td><code>1</code> (X Configuration)</td>
+                        <td>Defines motor mixer matrix: motors 1–4 speed up/slow down diagonally to command pitch, roll, and yaw without camera obstruction.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6-Axis Accel</strong></td>
+                        <td><code>INS_ACCOFFS_X, Y, Z</code><br><code>INS_ACCSCAL_X, Y, Z</code></td>
+                        <td>Calculated Offsets ($X, Y, Z$)<br>Scaling factors ($\approx 1.0$)</td>
+                        <td>Stores zero-g accelerometer biases and sensitivity multipliers to calculate true tilt angles and gravity vectors.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Live Compass</strong></td>
+                        <td><code>COMPASS_OFS_X, Y, Z</code><br><code>COMPASS_DIA_X, Y, Z</code></td>
+                        <td>Hard-iron offsets (mG)<br>Soft-iron ellipsoid diagonals</td>
+                        <td>Calibrates internal/external magnetometers to yield an accurate magnetic North heading reference.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Battery Monitor</strong></td>
+                        <td><code>BATT_MONITOR</code><br><code>BATT_CAPACITY</code></td>
+                        <td><code>4</code> (Analog Voltage & Current)<br>e.g., <code>3000</code> ($\text{mAh}$)</td>
+                        <td>Enables voltage and current sampling from the Power Module; defines total capacity to trigger low-battery RTL failsafes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sonar / Rangefinder</strong></td>
+                        <td><code>RNGFND1_TYPE</code></td>
+                        <td><code>0</code> (None / Disabled)</td>
+                        <td>Disables low-altitude acoustic distance ranging when no physical sonar or LiDAR hardware is connected.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RC Calibration</strong></td>
+                        <td><code>RCx_MIN</code><br><code>RCx_TRIM</code><br><code>RCx_MAX</code></td>
+                        <td>Min: $\approx 1000\,\mu\text{s}$<br>Trim: $\approx 1500\,\mu\text{s}$<br>Max: $\approx 2000\,\mu\text{s}$</td>
+                        <td>Maps mechanical transmitter stick travel to internal flight control software channels ($1 - 6$).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flight Modes</strong></td>
+                        <td><code>FLTMODE1</code> to <code>FLTMODE5</code><br><code>FLTMODE6</code></td>
+                        <td>Modes 1–5: <code>0</code> (STABILIZE)<br>Mode 6: <code>6</code> (RTL)</td>
+                        <td>Allocates flight behaviors to the transmitter mode switch. Modes 1–5 lock gyro self-leveling; Mode 6 provides emergency failsafe return.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout danger">
+            <span class="callout-icon">🔴</span>
+            <div>
+                <strong>Absolute Safety Rule: Complete Propeller Removal!</strong><br>
+                Propellers must be 100% removed from all motor shafts before executing the Setup Wizard. The wizard includes an RC calibration sequence and an arming test. An accidental throttle bump, inverted channel signal, or failsafe trigger on the workbench will instantly spin brushless motors to maximum RPM, presenting severe laceration and projectile hazards.
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works (System Architecture & Diagrams) -->
+    <section>
+        <h2>⚙️ System Architecture & Configuration Flow</h2>
+        <p>
+            The diagram below illustrates the flow of data during the wizard setup, from operator interaction and physical vehicle rotation to onboard memory storage:
+        </p>
+
+        <pre>
+                                     [ OPERATOR WORKSTATION ]
+                                   (PC Running Mission Planner)
+                                                |
+                                                v (USB Serial @ 57600 Baud)
+                                     [ Ground Telemetry Radio ]
+                                                :
+                                                : (Wireless MAVLink 915MHz / 433MHz)
+                                                :
+                                     [ Air Telemetry Radio ]
+                                                |
+                                                v (TELEM 1 Port)
++-----------------------------------------------------------------------------------------------+
+| DRONE SYSTEM UNDER CALIBRATION                                                                |
+|                                                                                               |
+|   +---------------------------------------------------------------------------------------+   |
+|   | PIXHAWK AUTOPILOT CORE (STM32 MCU running ArduCopter)                                 |   |
+|   |                                                                                       |   |
+|   |   1. Frame Declaration:    Sets motor mixer geometry [FRAME_TYPE = 1 (X-Frame)]       |   |
+|   |                                                                                       |   |
+|   |   2. Physical 6-Axis Tilt: [Internal Accels] ===(Sample 1g)===> [INS_ACCOFFS / SCAL]  |   |
+|   |                                                                                       |   |
+|   |   3. 3D Spherical Tumble:  [External Compass] ===(Fit Sphere)==> [COMPASS_OFS_X,Y,Z]   |   |
+|   |                                                                                       |   |
+|   |   4. Battery Capacity:     [Power Module Sense] ========> [BATT_CAPACITY: 3000mAh]    |   |
+|   |                                                                                       |   |
+|   |   5. Transmitter Sweeps:   [RC IN: SBUS/PPM] ===========> [RCx_MIN / TRIM / MAX]      |   |
+|   |                                                                                       |   |
+|   |   6. Flight Mode Switch:   [Channel 6 Mode Allocator] ===> [FLTMODE1-5: STAB, 6: RTL] |   |
+|   +---------------------------------------------------------------------------------------+   |
+|                                           |                                                   |
+|                                           v                                                   |
+|                   [ Non-Volatile Onboard Storage: FRAM / EEPROM ]                             |
+|                   (Parameters persist permanently across battery disconnects)                 |
++-----------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Wizard Walkthrough</h2>
+        <p>
+            Follow this sequential procedure demonstrated by The Drone Dojo to commission an autonomous drone in approximately 10 minutes:
+        </p>
+
+        <ol>
+            <li>
+                <strong>Prerequisites & Workspace Preparation:</strong>
+                Ensure the drone is connected to Mission Planner via wireless telemetry (solid green LEDs confirmed on both SiK radio modules, baud rate set to <code>57600</code>). Verify all propellers are completely removed from the motors.
+            </li>
+            <li>
+                <strong>Launch the Setup Wizard:</strong>
+                Navigate to the top ribbon menu and click <strong>INITIAL SETUP</strong>. In the left-hand navigation column, click <strong>Wizard</strong>. A multi-step window will launch.
+            </li>
+            <li>
+                <strong>Frame Selection (Step 1):</strong>
+                Select the airframe format: choose <strong>`Copter`</strong>, then select <strong>`X` Configuration</strong>. Click <strong>Next</strong>.
+                <br>
+                <div class="callout info">
+                    <span class="callout-icon">💡</span>
+                    <div>
+                        <strong>Why the X Frame?</strong> An "X" frame configuration places the four arms at $45^\circ$ offsets from the longitudinal axis, leaving a wide, clear forward field-of-view (FOV) for cameras and sensors between motors 1 and 2.
+                    </div>
+                </div>
+            </li>
+            <li>
+                <strong>6-Axis Accelerometer Calibration (Step 2):</strong>
+                Click <strong>Start Now</strong>. Sequentially place the drone in the six required physical orientations, ensuring the airframe is completely stationary before clicking <strong>Continue</strong> for each:
+                <ul>
+                    <li><strong>Level:</strong> Rest the drone flat on its landing gear on a level surface. Click <em>Continue</em>.</li>
+                    <li><strong>Left Side:</strong> Tip the drone $90^\circ$ onto its left arms/landing skids. Click <em>Continue</em>.</li>
+                    <li><strong>Right Side:</strong> Tip the drone $90^\circ$ onto its right arms/landing skids. Click <em>Continue</em>.</li>
+                    <li><strong>Nose Down:</strong> Orient the front arms/camera pointing vertically down toward the floor. Click <em>Continue</em>.</li>
+                    <li><strong>Nose Up:</strong> Orient the front arms/camera pointing vertically up toward the ceiling. Click <em>Continue</em>.</li>
+                    <li><strong>Back (Inverted):</strong> Flip the drone completely upside down. 
+                        <br>
+                        <span style="color: var(--accent-amber);">⚠️ Workshop Tip:</span> The elevated GPS mast on the back of the drone prevents it from resting flat. Hold the airframe securely by hand upside down, visually verify it is approximately level, keep it still, and click <em>Continue</em>.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Live Compass Calibration (Step 3):</strong>
+                Click <strong>Live Calibration</strong>. Pick up the drone in both hands. Smoothly tumble, pitch, roll, and yaw the drone through all 3D rotational axes in the air. 
+                <br>
+                Watch the sampling points populate the graphical sphere in Mission Planner. Continue rotating until the progress bar reaches 100% and a dialog appears stating: <em>"New compass offsets have been set."</em> Click <strong>OK</strong>.
+                <br>
+                <div class="callout tip">
+                    <span class="callout-icon">🟢</span>
+                    <div>
+                        <strong>Telemetry vs. USB Cable:</strong> The instructor specifically highlights that performing live compass calibration over a wireless telemetry link is significantly easier and safer than using a USB cable, which tangles, restricts 3D rotation, and risks breaking the flight controller's USB connector.
+                    </div>
+                </div>
+            </li>
+            <li>
+                <strong>Battery Monitor Setup (Step 4):</strong>
+                Configure the battery telemetry module:
+                <ul>
+                    <li><strong>Monitor:</strong> Select <code>Analog Voltage and Current</code> (or <code>4: Voltage and Current</code>).</li>
+                    <li><strong>Sensor:</strong> Select <code>9: Other / PX4</code> (matches standard Pixhawk Power Modules).</li>
+                    <li><strong>APM / Flight Controller Version:</strong> Select <code>Pixhawk / PX4</code>.</li>
+                    <li><strong>Battery Capacity:</strong> Enter your battery pack's nominal milliamp-hour rating (e.g., enter <code>3000</code> for a $3000\,\text{mAh}$ pack). Click <strong>Next</strong>.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Sonar / Rangefinder (Step 5):</strong>
+                If no downward-facing sonar or LiDAR sensor is installed, ensure the dropdown is set to <strong>`None`</strong> and click <strong>Next</strong>.
+            </li>
+            <li>
+                <strong>Radio Control Calibration (Step 6):</strong>
+                Power on your RC transmitter. (Ensure all top toggle switches are resting in the **UP / AWAY** position, or the transmitter will block boot-up with a switch warning). Click <strong>Calibrate Radio</strong>, then click <strong>OK</strong> on the propeller safety reminder:
+                <ul>
+                    <li><strong>Left Gimbal Sweep (Channels 3 & 4):</strong> Push the left stick smoothly into all four extreme diagonal corners. This maps the minimum and maximum travel endpoints for **Throttle (Ch 3)** and **Yaw (Ch 4)**.</li>
+                    <li><strong>Right Gimbal Sweep (Channels 1 & 2):</strong> Push the right stick smoothly into all four extreme diagonal corners. This maps **Roll (Ch 1)** and **Pitch (Ch 2)**.</li>
+                    <li><strong>Auxiliary Channels (Channels 5 & 6):</strong> On a 6-channel radio, sweep auxiliary knobs and switches to determine their channel mapping:
+                        <ul>
+                            <li>Rotate the auxiliary potentiometer knob through its full travel: observe the <strong>Channel 5</strong> green bar move from minimum to maximum.</li>
+                            <li>Toggle the auxiliary 2-position switch: observe the <strong>Channel 6</strong> bar jump between low and high states.</li>
+                        </ul>
+                    </li>
+                    <li>Re-center all primary sticks, pull the throttle stick to its absolute lowest point ($1000\,\mu\text{s}$), and click <strong>Click when Done</strong>. Click <strong>OK</strong> to commit the measured endpoints.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Flight Mode Configuration (Step 7):</strong>
+                Configure baseline flight modes mapped to your transmitter's auxiliary switch:
+                <ul>
+                    <li>Set <strong>Flight Modes 1 through 5</strong> to <strong>`Stabilize`</strong>. (Provides manual flight with automatic gyroscopic self-leveling; safe for maiden testing).</li>
+                    <li>Set <strong>Flight Mode 6</strong> to <strong>`Return to Launch` (RTL)</strong>. (Emergency failsafe mode; triggers autonomous return and landing at the takeoff point).</li>
+                    <li>Click <strong>Save</strong>.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Arming Test & Completion (Step 8):</strong>
+                The wizard initiates a pre-arm safety check. <em>Note:</em> The drone may refuse to arm indoors during this test; this is normal behavior because ArduCopter blocks arming when a valid 3D GPS satellite lock is missing indoors or when safety switches are disengaged.
+                <br>
+                Leave <strong>Geofencing</strong> set to disabled. Click <strong>Finish</strong>. The basic vehicle configuration is complete.
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Parameters & Commands -->
+    <section>
+        <h2>💻 Relevant Parameters & Numerical Ranges</h2>
+        <p>
+            The values configured by the wizard are stored in the flight controller's internal parameter tree. The key parameter boundaries include:
+        </p>
+
+        <pre>
+# Frame Architecture
+FRAME_TYPE     = 1           # 0: Plus (+), 1: X-Configuration, 2: V-Frame, 3: H-Frame
+
+# Battery Monitor Calibration
+BATT_MONITOR   = 4           # 4: Analog Voltage and Current sensing enabled
+BATT_CAPACITY  = 3000        # Nominal flight pack capacity in milliamp-hours (mAh)
+
+# Standardized Radio Control Endpoint Boundaries
+RC1_MIN        = 1004        # Measured minimum microsecond endpoint (Roll)
+RC1_MAX        = 1996        # Measured maximum microsecond endpoint (Roll)
+RC2_MIN        = 1002        # Measured minimum endpoint (Pitch)
+RC2_MAX        = 1998        # Measured maximum endpoint (Pitch)
+RC3_MIN        = 1000        # Measured minimum endpoint (Throttle Cut)
+RC3_MAX        = 2000        # Measured maximum endpoint (Full Throttle)
+RC4_MIN        = 1005        # Measured minimum endpoint (Yaw Left)
+RC4_MAX        = 1995        # Measured maximum endpoint (Yaw Right)
+
+# Auxiliary Mode Switching Allocation
+FLTMODE1       = 0           # 0: STABILIZE
+FLTMODE2       = 0           # 0: STABILIZE
+FLTMODE3       = 0           # 0: STABILIZE
+FLTMODE4       = 0           # 0: STABILIZE
+FLTMODE5       = 0           # 0: STABILIZE
+FLTMODE6       = 6           # 6: RETURN_TO_LAUNCH (RTL)
+        </pre>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Engineering Solutions</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Problem</th>
+                        <th>Underlying Root Cause</th>
+                        <th>Detection Method</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Accelerometer Calibration Times Out / Fails</strong></td>
+                        <td>The airframe was disturbed, vibrated, or moved while the algorithm was sampling a gravity vector.</td>
+                        <td>Mission Planner displays an error dialog: <em>"Calibration Failed / Timeout"</em>.</td>
+                        <td>Rest the airframe against solid, flat surfaces. When holding the inverted position, brace your hands firmly and remain completely still before clicking <em>Continue</em>.</td>
+                        <td>Static accelerometer calibration requires pure, stationary $1g$ DC gravity vector measurements without dynamic hand-shake noise.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compass Sampling Hangs / Does Not Fill Sphere</strong></td>
+                        <td>The airframe is not being rotated through enough unique 3D spherical orientations.</td>
+                        <td>The progress bar in Mission Planner halts below 100% despite continuous spinning along a single axis.</td>
+                        <td>Tumble the drone through all three physical planes: do continuous somersaults (Pitch), barrel rolls (Roll), and pirouettes (Yaw).</td>
+                        <td>Calculating a 3D soft-iron correction ellipsoid requires data points distributed across the entire upper, lower, and lateral spherical surfaces.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Radio Calibration Bars Do Not Move in GCS</strong></td>
+                        <td>RC receiver is unpowered, not bound to the transmitter, or signal wire is unseated from the <code>RC IN</code> port.</td>
+                        <td>Transmitter sticks are moved, but green channel indicator bars in Mission Planner remain frozen at $0\,\mu\text{s}$ or $1500\,\mu\text{s}$.</td>
+                        <td>Verify receiver LED shows a solid bind light; verify receiver output connects to Pixhawk <code>RC IN</code> (not an output rail).</td>
+                        <td>The flight controller's input capture timer requires an active serial data stream (SBUS/PPM) to decode channel pulse widths.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Drone Refuses to Arm at Wizard Conclusion</strong></td>
+                        <td>Pre-Arm safety checks reject arming due to missing outdoor GPS satellite lock, disengaged safety switch, or compass interference.</td>
+                        <td>Buzzer emits a low error tone; Mission Planner displays: <em>"PreArm: Need 3D Fix"</em> or <em>"PreArm: Safety Switch"</em>.</td>
+                        <td>Inspect the red annunciator text on the Flight Data HUD screen. Press the physical safety switch until solid red, or move outdoors to achieve a 3D GPS lock.</td>
+                        <td>ArduCopter includes strict safety interlocks that block motor arming when flight-critical sensors are unready or degraded.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transmitter Refuses to Boot Up for RC Calibration</strong></td>
+                        <td>Transmitter safety interlock detects that toggle switches or throttle sticks are not in their safe resting states.</td>
+                        <td>Transmitter vibrates, emits continuous warning beeps, and displays: <em>"SWITCH WARNING"</em> or <em>"THROTTLE WARNING"</em>.</td>
+                        <td>Ensure the throttle stick is pulled all the way down, and flip all auxiliary toggle switches up/away into their default positions.</td>
+                        <td>EdgeTX/OpenTX firmware enforces pre-start checks to prevent accidental motor spin-up or uncommanded mode changes upon boot.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect (Closed-Loop Drone Pipeline)</h2>
+        <p>
+            The wizard establishes the foundational mathematical boundaries required for closed-loop autonomous flight:
+        </p>
+
+        <pre>
+   [ TRANSMITTER GIMBALS ]              [ PHYSICAL VEHICLE ]              [ FLIGHT BATTERY ]
+    (Manual Sticks & Sw)                 (Accelerometers & Compass)        (LiPo Flight Pack)
+             |                                    |                                |
+             v                                    v                                v
+     [ RC Calibration ]                  [ Accel & Compass Cal ]            [ Battery Monitor ]
+  (1000µs - 2000µs Window)              (1g Biases & Heading Offset)       (Analog Sense & mAh)
+             \                                    |                                /
+              \                                   |                               /
+               v                                  v                              v
+        +-------------------------------------------------------------------------------+
+        |                 EXTENDED KALMAN FILTER (EKF) & CONTROL MATRIX                 |
+        |                                                                               |
+        |  1. Receptive to pilot intent via normalized PWM channel registers            |
+        |  2. Fuses gravity vectors with magnetic North to maintain stable level flight |
+        |  3. Allocates thrust across Motor Mixer Matrix [FRAME_TYPE = X]                |
+        |  4. Monitors remaining battery energy to trigger automatic RTL failsafe       |
+        +-------------------------------------------------------------------------------+
+                                                |
+                                                v
+                                  [ MOTORS 1-4 COMMAND PULSES ]
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Meaning</th>
+                        <th>Context & Practical Importance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Setup Wizard</strong></td>
+                        <td>An automated, multi-step graphical setup pipeline inside Mission Planner.</td>
+                        <td>Guides the builder through foundational frame, sensor, battery, and radio calibrations without manually editing parameter lists.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Frame Type (X-Frame)</strong></td>
+                        <td>A multirotor geometry where arms form an symmetric "X" relative to the forward flight vector.</td>
+                        <td>Standard layout for camera and FPV drones; keeps propellers clear of front-facing cameras while providing symmetrical pitch/roll authority.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6-Axis Calibration</strong></td>
+                        <td>Sampling gravity ($1g$) along six orthogonal directions: Level, Left, Right, Nose Down, Nose Up, and Inverted.</td>
+                        <td>Enables the flight controller's IMU to determine absolute horizontal level and calculate tilt angles accurately.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hard-Iron Distortion</strong></td>
+                        <td>Permanent magnetic fields generated by ferromagnetic materials (steel screws, motor magnets, buzzers) mounted on the airframe.</td>
+                        <td>Shifts the center of the magnetic sphere away from $(0,0,0)$; must be offset in software to prevent heading errors.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Soft-Iron Distortion</strong></td>
+                        <td>Distortions generated by magnetically permeable materials that alter the shape of the surrounding magnetic field.</td>
+                        <td>Deforms the spherical magnetic field into an ellipsoid; corrected by software transformation matrices.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PWM Microseconds ($\mu\text{s}$)</strong></td>
+                        <td>Pulse Width Modulation duration used to represent analog channel positions in RC systems.</td>
+                        <td>Standard RC range spans from $1000\,\mu\text{s}$ (minimum) to $2000\,\mu\text{s}$ (maximum), with $1500\,\mu\text{s}$ as neutral center.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RTL (Return to Launch)</strong></td>
+                        <td>An autonomous ArduCopter failsafe flight mode.</td>
+                        <td>Commands the drone to climb to a safe return altitude, navigate back to the takeoff coordinate using GPS, and execute an automated landing.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pre-Arm Checks</strong></td>
+                        <td>Automated sensor and software health audits executed by ArduPilot before allowing motor arming.</td>
+                        <td>Blocks motor start if sensors are uncalibrated, battery voltage is low, GPS precision is poor, or hardware faults exist.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways</h2>
+        <ul>
+            <li>🔴 <strong>Remove All Propellers:</strong> Never run the Setup Wizard with propellers attached to the motors. The wizard tests radio control endpoints and prompts for motor arming; bench testing with propellers installed is dangerous.</li>
+            <li>🟢 <strong>Calibrate Compass Wirelessly:</strong> Conducting live compass calibration over a wireless telemetry link eliminates USB cable tangles and prevents physical strain on the flight controller's micro-USB port.</li>
+            <li>🟡 <strong>Protect the Elevated GPS Mast:</strong> During the inverted (back) step of the accelerometer calibration, do not place the drone flat on the delicate GPS puck. Support the inverted airframe by hand, hold it level, and click continue.</li>
+            <li>🟢 <strong>Radio Calibration Sweeps:</strong> Push gimbals into all four diagonal corners rather than just moving them along single axes. This ensures both axes reach their maximum travel limits simultaneously.</li>
+            <li>⚠️ <strong>Indoor Arming Rejection is Normal:</strong> If the drone refuses to arm at the end of the wizard, do not assume hardware failure. ArduCopter blocks arming indoors if a valid 3D GPS satellite lock is missing or the physical safety button is not pressed.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Frame Selection:</strong> Standard quadcopters utilize `Copter` with `X` geometry (`FRAME_TYPE = 1`).</li>
+            <li><strong>Accelerometer Orientations:</strong> Exactly 6 stationary positions: Level, Left, Right, Nose Down, Nose Up, and Inverted.</li>
+            <li><strong>Compass Sampling:</strong> Requires continuous 3D rotational tumbling until spherical offset matrices are resolved.</li>
+            <li><strong>RC Pulse Range:</strong> Calibrates channels to match standard PWM endpoints ($1000\,\mu\text{s}$ minimum, $1500\,\mu\text{s}$ center, $2000\,\mu\text{s}$ maximum).</li>
+            <li><strong>Initial Flight Modes:</strong> Modes 1–5 set to <code>Stabilize</code> (manual leveling baseline); Mode 6 set to <code>RTL</code> (emergency autonomous failsafe).</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why is an "X" frame configuration preferred over a "Plus (+)" configuration for modern drones?</div>
+            <div class="qa-answer">The "X" configuration rotates the arms $45^\circ$ away from the centerline, keeping propellers clear of front-facing cameras and sensors while providing symmetric, decoupled pitch and roll control dynamics.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: Why must the drone remain completely stationary during each step of the accelerometer calibration?</div>
+            <div class="qa-answer">The calibration routine samples Earth's static $1g$ gravitational field to establish zero-biases and scaling factors. Any physical movement or vibration during sampling injects dynamic acceleration noise into the data, corrupting the horizontal level reference.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: Why is performing compass calibration over wireless telemetry recommended over a direct USB cable?</div>
+            <div class="qa-answer">Compass calibration requires tumbling the airframe $360^\circ$ through all three physical axes. A wired USB connection restricts physical movement, tangles around the frame, and risks bending or breaking the flight controller's USB connector.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: Why does the drone typically refuse to arm during the wizard's final test indoors?</div>
+            <div class="qa-answer">ArduCopter's default pre-arm safety checks enforce strict health criteria. Indoors, the GPS receiver cannot acquire a solid 3D satellite lock with low HDOP, and the external safety switch may not be engaged, causing the autopilot to block motor arming.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: Why is radio calibration required if standard RC control signals are already nominally 1000–2000µs?</div>
+            <div class="qa-answer">Transmitter hardware, gimbals, and protocol variations introduce small endpoint discrepancies (e.g., $1004\,\mu\text{s}$ to $1996\,\mu\text{s}$). Radio calibration maps the transmitter's specific physical stick travel to the flight controller's internal control channels.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Following the successful completion of the Mission Planner Setup Wizard, the recommended learning progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Completed in This Guide:</strong><br>
+                Airframe geometry declaration, 6-axis accelerometer calibration, 3D compass offset mapping, power monitor scaling, and RC endpoint calibration.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Pre-Arm Failure Diagnostics & Flight Data HUD Auditing (Next Logical Step):</strong>
+                Understanding the diagnostic annunciator flags on Mission Planner's Primary Flight Display (HUD) to resolve arming rejections (`PreArm: Check GPS`, `PreArm: Compass inconsistent`, `PreArm: Safety Switch`).
+            </li>
+            <li>
+                <strong>Motor Spin Direction & ESC Calibration:</strong>
+                Verifying individual motor sequence (Motors 1, 2, 3, 4) and rotational direction (CW vs. CCW) using Mission Planner's Motor Test utility (props off), followed by ESC throttle range synchronization.
+            </li>
+            <li>
+                <strong>Outdoor Maiden Flight Protocols:</strong>
+                Acquiring a solid outdoor 3D GPS satellite lock ($\ge 12$ satellites, $\text{HDOP} < 1.2$), conducting a controlled maiden liftoff in `Stabilize` mode, evaluating mechanical trim, and testing autonomous `RTL`.
+            </li>
+            <li>
+                <strong>Autonomous Mission Planning & Geofencing:</strong>
+                Configuring automated 3D waypoint grids, terrain following, camera triggers, and cylindrical geofence safety boundaries in Mission Planner's Flight Plan screen.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that the <strong>Setup Wizard</strong> translates physical realities into digital flight parameters; that the <strong>6-axis accelerometer calibration</strong> establishes the true gravity vector, the <strong>live compass tumble</strong> maps out magnetic interference, and <strong>radio calibration</strong> establishes microsecond control boundaries; and that <strong>propellers must never be mounted during bench configuration</strong>, you have mastered the core foundations of this tutorial and your autonomous multirotor is prepared for final motor direction checks and outdoor pre-flight tests.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
+```
+
+### Summary of Completed Engineering Notes:
+* **The Automated Pipeline:** Step-by-step navigation through the Mission Planner Setup Wizard.
+* **Frame Selection:** Setting up a standard multirotor `Copter` `X` geometry (`FRAME_TYPE = 1`).
+* **6-Axis Accelerometer Calibration:** Detailed orientation instructions, with safety tips for handling elevated GPS masts during the inverted (back) position.
+* **Live Compass Calibration:** Explaining the 3D spherical sampling process and highlighting the benefit of using wireless telemetry over a short USB tether.
+* **Power Module Setup:** Entering pack capacity ($\text{mAh}$) to establish accurate low-voltage and current failsafes.
+* **Radio Control (RC) Calibration:** Step-by-step gimbal stick sweeps, finding auxiliary channel controls, and mapping $1000\,\mu\text{s} - 2000\,\mu\text{s}$ endpoints.
+* **Flight Modes & Arming Checks:** Establishing baseline flight modes (`Stabilize` + `RTL`) and understanding pre-arm safety interlocks.

@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes: Troubleshooting Drone Arming Issues with Mission Planner</title>
+    <style>
+        :root {
+            --bg-canvas: #090d16;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #38bdf8;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.75;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid span strong {
+            color: var(--text-main);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            margin: 1.6rem 0 0.8rem 0;
+        }
+
+        p {
+            margin-bottom: 1.15rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.6rem;
+            margin-bottom: 1.3rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.55rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Concept Block Cards */
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.6rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 155px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.2rem 1.4rem;
+            margin: 1.3rem 0;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.08);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Diagrams & Code Blocks */
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            color: var(--accent-cyan);
+            margin: 1.3rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        /* Q&A Cards */
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem 1.5rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        /* Final Synthesis Box */
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.9rem;
+            font-size: 1.25rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 Troubleshoot Drone Arming Issues with Mission Planner</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=e5bHx59k_I8" target="_blank" rel="noopener noreferrer">YouTube - The Drone Dojo</a></span>
+            <span><strong>Duration:</strong> 3m 02s</span>
+            <span><strong>Instructor:</strong> The Drone Dojo</span>
+            <span><strong>Main Topic:</strong> ArduPilot Pre-Arm Failure Diagnostics, LED Status Decoding, and Multi-Compass Conflict Resolution</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            When completing an autonomous drone build and attempting initial arming, builders frequently encounter a complete refusal of the autopilot to spin the brushless motors. This concise diagnostic guide by The Drone Dojo addresses this exact roadblock.
+        </p>
+        <p>
+            Operating on an ArduCopter platform equipped with an Emlid Navio-class autopilot shield atop a Raspberry Pi, the instructor breaks down physical LED warning indicators (distinguishing RC disconnection from firmware safety blocks), demonstrates how to query the low-level autopilot operating system via the Mission Planner Ground Control Station (GCS) <strong>Messages Console</strong>, and isolates the single most common culprit in custom multirotor builds: <strong>Compass Variance</strong> caused by conflicting internal and external magnetometers.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. ArduPilot Pre-Arm Safety Interlocks & Gatekeepers</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A deterministic firmware evaluation pipeline executed by ArduPilot prior to energizing Electronic Speed Controllers (ESCs) and spooling brushless motors.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Unlike manual R/C hobby aircraft that spin motors whenever the throttle stick is advanced, autonomous multirotors rely on closed-loop sensor estimation (EKF). Arming with degraded sensor data, uncalibrated gyroscopes, magnetic corruption, or missing GPS locks guarantees instantaneous violent flips, flyaways, or catastrophic crashes.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> When the pilot commands an arm (holding the rudder stick down-right or issuing a MAVLink command from the GCS), ArduPilot audits all active hardware subsystems against strict tolerance thresholds (governed by the bitmask parameter <code>ARMING_CHECK</code>). If any single sensor fails its self-test, the arm command is rejected, an acoustic error chime is emitted, the onboard LED flashes yellow, and an explicit ASCII error string is transmitted over MAVLink to the GCS.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> In every ArduPilot flight stack (ArduCopter, ArduPlane, ArduRover, ArduSub).</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> If the flight controller is bumped or tilted while booting, the accelerometer calibration check fails. The flight computer rejects arming until the vehicle rests motionless on a level surface.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Basic understanding of autopilot firmware states (Boot $\rightarrow$ Disarmed $\rightarrow$ Armed).</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. The GCS Diagnostic Messages Console (MAVLink Statustext)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A dedicated textual console log embedded in Mission Planner (located in the bottom diagnostic docking tab under <code>Flight Data -> Messages</code>) that displays raw <code>STATUSTEXT</code> MAVLink packets broadcast from the autopilot.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Onboard status LEDs provide coarse binary feedback (e.g., "error exists"), but they cannot specify <em>which</em> of the 30+ potential pre-arm checks failed. The Messages console provides human-readable diagnostic strings straight from the Extended Kalman Filter (EKF) and sensor drivers.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The flight controller compiles diagnostic strings into MAVLink message ID #253 (<code>STATUSTEXT</code>) with a severity severity level (e.g., <code>MAV_SEVERITY_CRITICAL</code>). Mission Planner parses these packets and appends them sequentially with timestamps to the Messages tab.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> During bench commissioning, pre-flight audits, and post-incident forensic reviews.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> Rather than guessing why the drone will not arm, opening the Messages tab reveals: <code>PreArm: Compass inconsistent by 48 deg</code> or <code>PreArm: Throttle below failsafe</code>.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Established MAVLink connection (direct USB or wireless SiK telemetry radios).</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Compass Variance & Multi-Magnetometer Conflict</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An EKF failure condition triggered when two or more active magnetometers installed on the airframe report spatial magnetic heading vectors that diverge by more than the firmware's allowable mathematical threshold (typically $> 45^\circ$).</div>
+            <div class="concept-field"><span class="concept-label">Why do we study it?</span> Multirotors require a stable heading reference to fuse horizontal GPS velocity vectors. If the flight computer trusts an erroneous magnetic heading, it will command attitude corrections along the wrong axis, driving the vehicle into accelerating spiral circles known as <strong>"Toilet-Bowling"</strong>.</div>
+            <div class="concept-field"><span class="concept-label">How does it occur?</span> Most drone flight controllers (such as the Emlid Navio shield or Pixhawk) contain an <strong>internal magnetometer</strong> on the circuit board, while the external GPS puck houses an <strong>external magnetometer</strong> on an elevated stalk. The internal sensor sits directly adjacent to high-speed digital processors, switching power regulators, and high-current battery distribution traces (inducing massive local magnetic distortions, $B \propto I$). Meanwhile, the external sensor reads the true, clean Earth geomagnetic field. Because the internal compass is heavily biased, the two sensors report drastically different azimuths, causing the EKF to reject both and block arming with <code>PreArm: Compass variance</code>.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> In the compass calibration and EKF heading estimation pipeline of all multi-compass autonomous systems.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> External Compass 1 on the mast reads magnetic North at $002^\circ$. Internal Compass 2 on the PCB reads $058^\circ$ due to power supply proximity. The $56^\circ$ delta exceeds ArduPilot's threshold; arming is blocked.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Basic familiarity with geomagnetic fields and vector divergence.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. Outdoor Magnetometer Calibration Geometry</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The mandatory practice of conducting 3D live compass calibrations exclusively in open, outdoor field environments free of civil infrastructure.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Earth's ambient geomagnetic field is extraordinarily weak ($0.25 - 0.65\,\text{Gauss}$ or $25 - 65\,\mu\text{T}$). Indoor workshop environments contain structural steel reinforcement rebar inside concrete floors, steel-frame workbenches, computer monitors, and domestic wiring. Calibrating indoors maps these massive localized distortions into the flight controller's offset registers, rendering heading estimations wildly inaccurate once the drone leaves the building.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Taking the drone outside into an open grassy park or field allows the tri-axial magnetometer to sample an undistorted geomagnetic field as the airframe is rotated in a 3D sphere, resolving pure hard-iron and soft-iron correction ellipsoids.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All autonomous robotic platforms relying on magnetic North heading reference.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Wireless telemetry connection (to avoid field-tethering to desktop PCs).</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details & Parameter Specifications</h2>
+        <p>
+            The instructor highlights specific hardware states and software registers inside Mission Planner that govern arming checks and sensor allocation. The table below details the exact parameters, LED codes, and operational thresholds:
+        </p>
+
+        <h3>Hardware Annunciator Decoding (Navio Shield / Autopilot Status LED)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Visual LED State</th>
+                        <th>Blink Frequency</th>
+                        <th>Underlying Autopilot Condition</th>
+                        <th>Required Engineering Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Slow Blinking Yellow</strong></td>
+                        <td>$\approx 1\,\text{Hz}$ (1 blink/sec)</td>
+                        <td><strong>RC Receiver Disconnected / Transmitter Off</strong>. The flight controller is receiving zero valid PWM/SBUS frames on <code>RC IN</code>.</td>
+                        <td>Power on the RC transmitter, ensure the receiver is bound, and verify the signal cable is seated into the receiver port.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fast Blinking Yellow</strong></td>
+                        <td>$\approx 4 - 8\,\text{Hz}$ (Rapid strobe)</td>
+                        <td><strong>Pre-Arm Safety Check Failure</strong>. The RC link is active, but internal firmware audits are blocking motor arming due to sensor faults.</td>
+                        <td>Connect to Mission Planner via telemetry, inspect the <code>Messages</code> tab, identify the blocking sensor, and resolve the fault.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flashing Blue</strong></td>
+                        <td>$\approx 1\,\text{Hz}$</td>
+                        <td><strong>Sensors Healthy; Seeking GPS Lock</strong>. Pre-arm checks pass for manual modes, but autonomous GPS modes remain locked.</td>
+                        <td>Wait for GPS receiver to acquire 3D satellite lock ($\text{HDOP} < 1.5, \ge 9$ satellites).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flashing Green</strong></td>
+                        <td>$\approx 1\,\text{Hz}$</td>
+                        <td><strong>Disarmed, Fully Cleared</strong>. All pre-arm checks pass; 3D GPS satellite lock acquired. Ready to arm.</td>
+                        <td>Execute arming command (rudder stick down-right or GCS arm).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Solid Green / Solid Color</strong></td>
+                        <td>Continuous ON</td>
+                        <td><strong>Armed & Active</strong>. High-voltage power outputs are live; motors are spinning or ready to spool.</td>
+                        <td>Step back from airframe; prepare for flight.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Governing ArduPilot Configuration Parameters</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter Register</th>
+                        <th>Configured Value</th>
+                        <th>Default Range</th>
+                        <th>Engineering Role & Functional Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>COMPASS_USE</code></td>
+                        <td><code>1</code> (Enabled)</td>
+                        <td><code>0</code> or <code>1</code></td>
+                        <td>Enables <strong>Compass 1 (Primary / External)</strong> located on the elevated GPS mast for EKF attitude and heading fusion.</td>
+                    </tr>
+                    <tr>
+                        <td><code>COMPASS_USE2</code></td>
+                        <td><code>0</code> (Disabled / Unchecked)</td>
+                        <td><code>0</code> or <code>1</code></td>
+                        <td><strong>Disables Compass 2 (Secondary / Internal PCB)</strong>. Stops ArduPilot from sampling the noisy internal Navio/Pixhawk magnetometer, instantly resolving Compass Variance faults.</td>
+                    </tr>
+                    <tr>
+                        <td><code>COMPASS_USE3</code></td>
+                        <td><code>0</code> (Disabled / Unchecked)</td>
+                        <td><code>0</code> or <code>1</code></td>
+                        <td>Disables tertiary onboard magnetometer if present on the carrier board silicon.</td>
+                    </tr>
+                    <tr>
+                        <td><code>ARMING_CHECK</code></td>
+                        <td><code>1</code> (All Enabled)</td>
+                        <td><code>0</code> (None) to <code>1</code> (All)</td>
+                        <td>Bitmask governing pre-arm validation. Never set to <code>0</code> to bypass faults; always diagnose root causes.</td>
+                    </tr>
+                    <tr>
+                        <td><code>FS_THR_ENABLE</code></td>
+                        <td><code>1</code> (Enabled)</td>
+                        <td><code>0</code> to <code>3</code></td>
+                        <td>Throttle failsafe interlock. Rejects arming if throttle channel pulse drops below <code>FS_THR_VALUE</code> ($975\,\mu\text{s}$).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>Warning: Never Force Arming by Disabling ARMING_CHECK!</strong><br>
+                Novice builders frustrated by arming rejections often set <code>ARMING_CHECK = 0</code> in the Full Parameter Tree. This forcibly bypasses all safety interlocks, allowing the drone to arm even with completely corrupted compass heading vectors or dead sensors. If a drone arms with a $50^\circ$ heading error, engaging GPS modes (`Loiter`, `RTL`, `Auto`) will cause immediate high-speed horizontal flyaways or violent ground rolls. Always resolve the sensor error properly!
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works (System Architecture & Diagrams) -->
+    <section>
+        <h2>⚙️ System Architecture & Pre-Arm Diagnostic Signal Flow</h2>
+        <p>
+            The diagram below illustrates how ArduPilot processes physical switches, radio inputs, and dual-compass magnetic field data through its internal Extended Kalman Filter (EKF) pre-arm audit pipeline:
+        </p>
+
+        <pre>
+                                     [ GROUND CONTROL STATION (GCS) ]
+                                       (PC Running Mission Planner)
+                                                    ^
+                                                    | (Wireless MAVLink Telemetry @ 57600 Baud)
+                                                    v
+                                       [ Air Telemetry Radio ]
+                                                    |
+                                                    v (TELEM 1 / UART Port)
++---------------------------------------------------------------------------------------------------------------+
+| DRONE AUTOPILOT CORE (Raspberry Pi + Navio Shield running ArduCopter)                                         |
+|                                                                                                               |
+|   +--------------------------+                         +----------------------------------------------+       |
+|   | SENSORS UNDER EVALUATION |                         | EXTENDED KALMAN FILTER (EKF) PRE-ARM AUDIT   |       |
+|   +--------------------------+                         +----------------------------------------------+       |
+|                                                                       |                                       |
+|   1. External Compass (Mast) ========> Heading: 002° ===+             |                                       |
+|      (Clean Earth B-field)                              |             |                                       |
+|                                                         v             v                                       |
+|   2. Internal Compass (PCB)  ========> Heading: 058° ===> [ Heading Delta: 56° ]                              |
+|      (Corrupted by DC wires)                                          |                                       |
+|                                                                       v                                       |
+|                                                  [ Delta > 45° Tolerance Limit? ]                             |
+|                                                              /        \                                       |
+|                                                      (YES)  /          \  (NO)                                |
+|                                                            v            v                                     |
+|                                             [! PRE-ARM REJECTION !]  [ ALL CHECKS PASS ]                      |
+|                                             - Motor Arming BLOCKED   - Arming PERMITTED                       |
+|                                             - Status LED: FAST YEL   - Status LED: SOLID GRN                  |
+|                                             - Output MAVLink Packet: - Spool Motor ESCs                       |
+|                                               "Compass variance"                                              |
++---------------------------------------------------------------------------------------------------------------+
+                                 |                                              |
+                                 v                                              v
+      [ Mission Planner "Messages" Tab ]                              [ Brushless Motors ]
+         PreArm: Compass variance                                    (Armed & Spinning)
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Arming Troubleshooting</h2>
+        <p>
+            Follow this sequential workshop procedure demonstrated by The Drone Dojo to diagnose arming failures and permanently eliminate multi-compass conflicts:
+        </p>
+
+        <ol>
+            <li>
+                <strong>Observe Physical Hardware LED Annunciators:</strong>
+                Power on the drone and observe the multi-color status LED (on the top of the Navio shield or Pixhawk puck):
+                <ul>
+                    <li>If the LED exhibits a <strong>slow yellow blink ($1\,\text{Hz}$)</strong>: Your RC transmitter is turned off, unbound, or unpowered. Turn on the transmitter; the LED should shift state.</li>
+                    <li>If the transmitter is powered ON and the LED exhibits a <strong>rapid yellow blink ($4 - 8\,\text{Hz}$)</strong>: The autopilot has rejected arming due to an internal sensor pre-arm check failure. Proceed to Step 2.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Query the Ground Control Station Messages Console:</strong>
+                Connect the drone to Mission Planner over your wireless telemetry link ($57600\,\text{baud}$).
+                <br>
+                Navigate to the <strong>Flight Data</strong> screen. Look at the lower diagnostic dock situated beneath the artificial horizon (HUD). Click the <strong>Messages</strong> tab.
+                <br>
+                Review the timestamped console strings generated by the low-level firmware:
+                <ul>
+                    <li><code>PreArm: Throttle below failsafe</code> $\rightarrow$ RC receiver is off, or channel 3 minimum endpoint is misaligned.</li>
+                    <li><code>PreArm: Bad velocity / GPS glitch</code> $\rightarrow$ Insufficient outdoor satellite lock or multipath interference.</li>
+                    <li><code>PreArm: Accels inconsistent</code> $\rightarrow$ Accelerometer bias mismatch; static 6-axis calibration required.</li>
+                    <li><code>PreArm: Compass variance</code> $\rightarrow$ Dual-compass conflict between internal PCB sensor and external mast sensor.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Isolate and Disable the Conflicting Internal Magnetometer:</strong>
+                If the error reads <em>"Compass variance"</em> (the most prevalent issue on Navio and multi-sensor builds):
+                <ul>
+                    <li>Click the top navigation ribbon: <strong>INITIAL SETUP</strong>.</li>
+                    <li>In the left-hand column, expand <strong>Mandatory Hardware</strong> and click <strong>Compass</strong>.</li>
+                    <li>Inspect the active compass selection matrix. You will observe multiple compasses enabled simultaneously (e.g., <em>Compass 1</em>, <em>Compass 2</em>, and <em>Compass 3</em> all checked as <code>Use this compass</code>).</li>
+                    <li><strong>Uncheck Compass 2</strong> and <strong>Uncheck Compass 3</strong>. Leave strictly <strong>Compass 1 (the external mast-mounted puck)</strong> checked as active.</li>
+                    <li>Mission Planner commits these changes immediately to ArduPilot registers (<code>COMPASS_USE2 = 0</code>, <code>COMPASS_USE3 = 0</code>).</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Reboot and Power-Cycle the Autopilot:</strong>
+                Reboot the flight controller (either power-cycle the flight battery or issue a software reboot via Mission Planner). Re-connect MAVLink.
+                <br>
+                Verify whether the fast yellow blinking LED transitions to blue (seeking GPS) or flashing green (ready to arm), and confirm that <em>"Compass variance"</em> has disappeared from the Messages tab.
+            </li>
+            <li>
+                <strong>Execute Outdoor Live Magnetometer Calibration (If Error Persists):</strong>
+                If compass errors persist, the primary magnetometer's offset matrix is corrupted:
+                <br>
+                <div class="callout danger">
+                    <span class="callout-icon">🔴</span>
+                    <div>
+                        <strong>Strict Field Rule: Never Calibrate Compass Indoors!</strong><br>
+                        The instructor explicitly warns that calibrating magnetometers indoors guarantees failure. Reinforced steel concrete, desktop computers, batteries, and steel furniture generate severe local magnetic fields. Always take the drone, laptop, and telemetry link outdoors to an open park or airfield before clicking <strong>Live Calibration</strong>.
+                    </div>
+                </div>
+                In Mission Planner under <code>Initial Setup -> Mandatory Hardware -> Compass</code>, click <strong>Live Calibration</strong>. Rotate the vehicle smoothly through all 3D spherical axes (pitching, rolling, yawing) until the progress bar hits 100% and offsets are committed.
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Parameters & Commands -->
+    <section>
+        <h2>💻 Relevant Parameters, Console Outputs & Configuration Values</h2>
+        <p>
+            The values and configuration registers modified during arming troubleshooting include:
+        </p>
+
+        <pre>
+# Multi-Compass Allocation Registers
+COMPASS_USE     = 1           # 1: Use Primary Magnetometer (External Mast Puck)
+COMPASS_USE2    = 0           # 0: Disable Secondary Magnetometer (Noisy Internal Navio PCB)
+COMPASS_USE3    = 0           # 0: Disable Tertiary Magnetometer (If present)
+
+# Primary Compass Assignment Priority
+COMPASS_PRIMARY = 0           # 0: Select Compass 1 as the primary EKF heading datum
+
+# Pre-Arm Safety Gate Mask
+ARMING_CHECK    = 1           # 1: Perform ALL pre-arm health audits (Default & Mandatory)
+                              # 0: Bypasses checks (DANGEROUS - NEVER USE IN FLIGHT)
+
+# Radio Control Throttle Failsafe Thresholds
+FS_THR_ENABLE   = 1           # 1: Enabled for multirotor safety
+FS_THR_VALUE    = 975         # Microseconds (PWM). If Ch 3 drops below 975µs -> Failsafe Triggered
+
+# Common MAVLink STATUSTEXT Annunciator Strings in Messages Console
+# ------------------------------------------------------------------
+# "PreArm: Throttle below failsafe"  ==> RC link dead or Ch 3 min endpoint < 975µs
+# "PreArm: Compass variance"         ==> Heading mismatch between Compass 1 and Compass 2 > 45°
+# "PreArm: Inconsistent compasses"   ==> Field strength divergence between magnetic sensors
+# "PreArm: Need 3D Fix"              ==> GPS constellation lock missing (normal indoors)
+# "PreArm: Accels inconsistent"      ==> IMU 1 and IMU 2 gravity vectors diverge > tolerance
+        </pre>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Engineering Solutions</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Problem</th>
+                        <th>Underlying Root Cause</th>
+                        <th>Detection Method</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Drone Refuses to Arm; LED Flashes Fast Yellow</strong></td>
+                        <td>ArduPilot pre-arm safety interlock has detected a sensor failure or uncalibrated subsystem.</td>
+                        <td>Flight Data HUD displays red banner; <code>Messages</code> tab outputs explicit <code>PreArm: [Reason]</code> string.</td>
+                        <td>Inspect the <code>Messages</code> console; address the specific failing sensor (e.g., calibrate accels, resolve failsafe).</td>
+                        <td>ArduPilot enforces deterministic pre-flight checks to prevent launching an unguided or unstable aircraft.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PreArm: Compass Variance / Inconsistent Compasses</strong></td>
+                        <td>Internal PCB magnetometer (subject to high EMI from CPU/power wires) disagrees with external mast magnetometer.</td>
+                        <td>Messages tab displays <em>"PreArm: Compass variance"</em>; EKF compass variance bar on HUD exceeds 0.8.</td>
+                        <td>Navigate to <code>Mandatory Hardware -> Compass</code>; uncheck <strong>Compass 2</strong> and <strong>Compass 3</strong>; reboot.</td>
+                        <td>Disabling the corrupted internal sensor forces the EKF to rely strictly on the clean, uncorrupted external magnetometer on the mast.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PreArm: Throttle Below Failsafe</strong></td>
+                        <td>RC transmitter is powered off, or receiver throttle channel (Channel 3) endpoint is misaligned.</td>
+                        <td>Autopilot status LED flashes slow yellow ($1\,\text{Hz}$); Messages tab reports failsafe trigger.</td>
+                        <td>Power on transmitter; verify bind light on receiver; recalibrate radio endpoints in <code>Mandatory Hardware -> Radio Calibration</code>.</td>
+                        <td>ArduPilot detects zero pulse width or a pulse below <code>FS_THR_VALUE</code>, interpreting the condition as a severed control link.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compass Calibration Fails or Drifts After Setup</strong></td>
+                        <td>Live calibration was conducted indoors near structural rebar, metal tables, or magnetic electronics.</td>
+                        <td>Heading drifts continuously when the drone sits still; HUD horizon banks erratically during yaw rotation.</td>
+                        <td>Take the drone, laptop, and telemetry link to an open outdoor grassy field; rerun 3D Live Compass Calibration.</td>
+                        <td>Outdoors, the magnetic sensor samples the pure Earth geomagnetic field without localized ferromagnetic building distortions.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PreArm: Need 3D Fix Indoors</strong></td>
+                        <td>GPS receiver cannot acquire line-of-sight satellite signals through building roofs and walls.</td>
+                        <td>GPS LED pulses blue; HUD reads <code>No GPS</code> or <code>GPS: No Fix</code>.</td>
+                        <td>This is completely normal indoors. Either test arming in non-GPS modes (like <code>Stabilize</code>), or move outdoors to achieve 3D lock.</td>
+                        <td>Autonomous flight modes (`Loiter`, `RTL`) require centimeter/meter-level satellite triangulation before allowing motor start.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect (The Complete Commissioning Pipeline)</h2>
+        <p>
+            This tutorial forms the critical diagnostic bridge connecting initial installation to maiden flight within The Drone Dojo curriculum:
+        </p>
+
+        <pre>
+  +---------------------------------------------------------------------------------------------+
+  | PLAYLIST CURRICULAR PROGRESSION (The Drone Dojo)                                            |
+  +---------------------------------------------------------------------------------------------+
+  |                                                                                             |
+  |  [ Video 1: Telemetry Radio Connection ]                                                     |
+  |  - Established wireless MAVLink communication at 57600 baud.                                |
+  |  - Enabled untethered, cable-free Ground Station monitoring.                                |
+  |                               |                                                             |
+  |                               v                                                             |
+  |  [ Video 2: Mission Planner Setup Wizard ]                                                  |
+  |  - Declared airframe geometry (Copter X).                                                   |
+  |  - Executed 6-axis accelerometer & initial live compass calibrations.                       |
+  |  - Calibrated radio endpoints (1000µs–2000µs) and mapped flight modes (Stabilize + RTL).    |
+  |  * Result: Drone configuration committed, but drone refused to arm indoors!                 |
+  |                               |                                                             |
+  |                               v                                                             |
+  |  [ Video 3: Troubleshoot Arming Issues (THIS GUIDE) ]                                       |
+  |  - Decoded fast vs. slow yellow LED annunciator states.                                     |
+  |  - Queried MAVLink STATUSTEXT in Mission Planner's "Messages" Console.                      |
+  |  - Isolated Compass Variance: Disabled noisy internal Compass 2, retaining mast Compass 1.  |
+  |  - Enforced outdoor-only magnetometer calibration standards.                                |
+  |                               |                                                             |
+  |                               v                                                             |
+  |  [ OUTCOME: ALL PRE-ARM GATES CLEARED -> AIRCRAFT READY FOR OUTDOOR MAIDEN FLIGHT ]         |
+  +---------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Meaning</th>
+                        <th>Context & Practical Importance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pre-Arm Checks</strong></td>
+                        <td>Automated algorithmic health audits executed by ArduPilot before enabling motor outputs.</td>
+                        <td>Prevents the drone from spinning motors if sensors are uncalibrated, voltages are low, or heading references are corrupt.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compass Variance</strong></td>
+                        <td>An EKF error triggered when heading calculations from multiple active magnetometers diverge beyond acceptable limits ($> 45^\circ$).</td>
+                        <td>The #1 most common arming blocker in dual-compass builds; resolved by disabling the noisy internal sensor.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Messages Console</strong></td>
+                        <td>The diagnostic text log in Mission Planner (`Flight Data -> Messages`) that displays MAVLink <code>STATUSTEXT</code> packets.</td>
+                        <td>The primary diagnostic window used by engineers to identify the exact cause of arming rejections.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Navio Shield</strong></td>
+                        <td>An autopilot HAT (Hardware Attached on Top) designed by Emlid that mounts directly atop a Raspberry Pi single-board computer.</td>
+                        <td>Transforms a Linux computer into a full ArduPilot flight controller; houses internal IMUs, barometers, and magnetometers.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Toilet-Bowling</strong></td>
+                        <td>An unstable flight anomaly where a multirotor circles in widening, accelerating horizontal spirals during GPS position hold.</td>
+                        <td>Caused by severe compass heading errors relative to GPS velocity vectors; prevented by disabling internal compasses and calibrating outdoors.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Throttle Failsafe</strong></td>
+                        <td>A software safety interlock triggered when the receiver throttle channel drops below a preset pulse width ($975\,\mu\text{s}$).</td>
+                        <td>Protects the drone if the radio link is severed; blocks arming if the transmitter is powered off or miscalibrated.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hard-Iron Distortion</strong></td>
+                        <td>Permanent magnetic fields generated by ferromagnetic screws, motor magnets, and chassis components.</td>
+                        <td>Shifts the center of the magnetic sampling sphere away from $(0,0,0)$; neutralized via live calibration offsets.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways</h2>
+        <ul>
+            <li>🔴 <strong>Never Troubleshoot Arming Blind:</strong> If the drone refuses to arm, do not guess or randomly recalibrate sensors. Connect via telemetry, open Mission Planner, and read the exact error string in the <strong>Messages</strong> tab.</li>
+            <li>🟡 <strong>Decode the Yellow LED Blink Rate:</strong> 
+                <ul>
+                    <li>Slow blink ($1\,\text{Hz}$) = Transmitter is off, unbound, or throttle failsafe triggered.</li>
+                    <li>Fast blink ($4 - 8\,\text{Hz}$) = Transmitter is on, but firmware pre-arm safety checks are blocking arming.</li>
+                </ul>
+            </li>
+            <li>🟢 <strong>Disable Internal Magnetometers:</strong> On builds with both internal flight controller sensors and an external mast-mounted GPS/compass puck, uncheck <strong>Compass 2</strong> in Mission Planner. Internal compasses suffer massive EMI from the motherboard and power distribution board.</li>
+            <li>⚠️ <strong>Calibrate Compasses Outdoors Only:</strong> Performing live compass calibration inside a building guarantees compass errors. Concrete rebar and metal structures distort magnetic North. Always calibrate in an open field.</li>
+            <li>🔴 <strong>Never Disable ARMING_CHECK:</strong> Setting <code>ARMING_CHECK = 0</code> to force motor arming bypasses vital safety gates and frequently results in high-speed flyaways or catastrophic crashes.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Diagnostic Tab Location:</strong> <code>Flight Data -> Messages</code> (displays MAVLink <code>STATUSTEXT</code> strings).</li>
+            <li><strong>Slow Yellow Blink:</strong> Indicates RC transmitter is OFF or receiver signal is lost.</li>
+            <li><strong>Fast Yellow Blink:</strong> Indicates RC transmitter is ON, but pre-arm safety checks are actively rejecting arming.</li>
+            <li><strong>Compass Variance Cause:</strong> Discrepancy ($> 45^\circ$) between the mast-mounted Compass 1 and noisy internal Compass 2.</li>
+            <li><strong>Compass Variance Fix:</strong> Uncheck <code>Use this compass</code> for Compass 2 (and 3), commit parameters, and reboot.</li>
+            <li><strong>Calibration Environment:</strong> Strictly outdoors in an open field, clear of civil concrete and metal structures.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: What does a fast-blinking yellow status LED indicate compared to a slow-blinking yellow LED on an ArduPilot drone?</div>
+            <div class="qa-answer">A slow-blinking yellow LED ($1\,\text{Hz}$) indicates that the autopilot is receiving zero RC signal (the transmitter is off or disconnected, triggering throttle failsafe). A fast-blinking yellow LED ($4 - 8\,\text{Hz}$) indicates that the RC link is healthy and active, but an internal firmware pre-arm safety check (such as compass variance, uncalibrated accels, or hardware failure) is blocking motor arming.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: Where exactly in Mission Planner can you find the specific reason why your drone refuses to arm?</div>
+            <div class="qa-answer">In the <strong>Flight Data</strong> screen, in the diagnostic docking window beneath the Heads-Up Display (HUD), click on the <strong>Messages</strong> tab. This console prints the exact real-time MAVLink <code>STATUSTEXT</code> error string generated by ArduPilot (e.g., <code>PreArm: Compass variance</code> or <code>PreArm: Throttle below failsafe</code>).</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: What is "Compass Variance" and why does it occur on multi-rotor builds like the Navio or Pixhawk?</div>
+            <div class="qa-answer">Compass variance occurs when the Extended Kalman Filter (EKF) detects a significant heading discrepancy between two active magnetometers. It happens because the internal compass on the flight controller PCB is exposed to severe electromagnetic interference (EMI) from the processor, power rails, and battery wires, causing its heading reading to diverge significantly from the clean external compass mounted on the elevated mast.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: How do you resolve a persistent "Compass Variance" error in Mission Planner?</div>
+            <div class="qa-answer">Navigate to <code>Initial Setup -> Mandatory Hardware -> Compass</code>. In the compass selection matrix, uncheck <strong>Use this compass</strong> for <strong>Compass 2</strong> (and Compass 3 if present), leaving only Compass 1 (the external mast-mounted puck) active. Commit the parameters, reboot the flight controller, and perform a fresh outdoor live calibration if necessary.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: Why must magnetometer (compass) calibration always be performed outdoors in an open field?</div>
+            <div class="qa-answer">Earth's magnetic field is very weak ($0.25 - 0.65\,\text{Gauss}$). Indoor buildings contain structural steel rebar inside concrete floors, steel-frame tables, computer monitors, and active AC wiring that severely warp local magnetic fields. Calibrating indoors writes these artificial distortions into the flight controller's offset tables, causing severe navigational divergence ("toilet-bowling" or flyaways) once the aircraft is flown outdoors.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Following the successful resolution of pre-arm diagnostic errors and compass conflicts, the recommended progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Completed in This Guide:</strong><br>
+                Decoding autopilot status LEDs, querying MAVLink console messages, resolving multi-compass variance, and establishing outdoor calibration protocols.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Motor Spin Direction & ESC Sequence Verification (Next Immediate Step):</strong>
+                Using Mission Planner's Motor Test utility (`Initial Setup -> Optional Hardware -> Motor Test`) with all propellers removed to verify that Motors 1, 2, 3, and 4 spin in their designated CW and CCW directions matching the Copter X frame matrix.
+            </li>
+            <li>
+                <strong>Outdoor 3D GPS Satellite Lock Acquisition:</strong>
+                Taking the vehicle outdoors to acquire an enterprise-grade 3D satellite constellation lock ($\ge 12$ satellites, $\text{HDOP} < 1.2$) and observing the transition to a solid green armed status LED.
+            </li>
+            <li>
+                <strong>Maiden Flight & Initial Tuning Protocols:</strong>
+                Conducting a controlled maiden liftoff in <code>Stabilize</code> mode, evaluating mechanical trim and hover throttle percentage, testing <code>AltHold</code> barometric lock, and evaluating autonomous <code>RTL</code> (Return to Launch).
+            </li>
+            <li>
+                <strong>In-Flight Compass Compensation (CompassMot):</strong>
+                Measuring current-induced magnetic interference in software and calculating current-dependent magnetic correction vectors using ArduCopter's built-in <code>CompassMot</code> routine.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that <strong>pre-arm safety checks protect your multirotor from launching with compromised sensors</strong>; that a <strong>fast-blinking yellow LED signals an internal safety rejection</strong> while a <strong>slow-blinking yellow LED indicates an RC link loss</strong>; that the <strong>Messages console in Mission Planner reveals the exact root cause of the fault</strong>; that <strong>disabling the noisy internal compass resolves Compass Variance</strong>; and that <strong>compass calibrations must strictly be conducted outdoors in open fields</strong>, you have mastered the foundational diagnostic core of this tutorial and your autonomous multirotor is prepared for final motor checks and outdoor maiden flight.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Notes: Mission Planner Download and Telemetry Connection</title>
+    <style>
+        :root {
+            --bg-canvas: #090d16;
+            --bg-card: #0f172a;
+            --bg-card-alt: #172239;
+            --bg-code: #050811;
+            --border-dim: #1e293b;
+            --border-bright: #38bdf8;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.75;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        header.meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0c1220 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.35;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid strong {
+            color: var(--text-heading);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 1.38rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: 0.65rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            margin: 1.6rem 0 0.8rem 0;
+        }
+
+        p {
+            margin-bottom: 1.15rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.75rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.6rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.85rem;
+            font-size: 0.96rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 190px;
+        }
+
+        .callout {
+            border-radius: 8px;
+            padding: 1.15rem 1.35rem;
+            margin: 1.35rem 0;
+            display: flex;
+            gap: 0.95rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.09);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.09);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.09);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.09);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout.context {
+            background-color: rgba(129, 140, 248, 0.09);
+            border: 1px solid rgba(129, 140, 248, 0.35);
+            color: #e0e7ff;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.9rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.9rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            color: var(--accent-cyan);
+            margin: 1.3rem 0;
+            line-height: 1.55;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.35rem;
+            margin-bottom: 1.15rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2.2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.25rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 Mission Planner Download and Telemetry Connection</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=oUE1HEc7Vrw" target="_blank" rel="noopener noreferrer">YouTube - The Drone Dojo</a></span>
+            <span><strong>Duration:</strong> 4m 47s</span>
+            <span><strong>Instructor:</strong> The Drone Dojo</span>
+            <span><strong>Main Topic:</strong> Mission Planner Installation & Over-The-Air Telemetry Pairing</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial provides an essential, step-by-step commissioning walkthrough for connecting an autonomous unmanned aerial vehicle (multirotor drone running <strong>ArduPilot</strong>) to a desktop computer using the <strong>Mission Planner</strong> Ground Control Station (GCS) over a wireless radio telemetry link.
+        </p>
+        <p>
+            The instructor demonstrates the clean installation of Mission Planner on a Windows workstation, highlights why Windows is the native host operating system for the ArduPilot toolchain, introduces paired <strong>SiK telemetry transceivers</strong> (Air module vs. Ground module), explains physical hardware LED pairing indications, and details the exact connection parameters—specifically COM port enumeration, baud rate selection (<strong>57600 baud</strong>), and the bidirectional MAVLink parameter download sequence. Finally, the video verifies that live orientation, altitude, yaw heading, and satellite GPS coordinates stream onto the Primary Flight Display (HUD).
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. Ground Control Station (GCS) Telemetry vs. Direct RC Control Link</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The separation of the vehicle's wireless links into two concurrent paths: an analog or digital Radio Control (RC) link for manual stick piloting (e.g., 2.4 GHz / ExpressLRS), and an independent, bidirectional wireless telemetry link carrying digital MAVLink data packets between the flight controller and the ground computer.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> A standard RC transmitter provides physical stick control but cannot easily visualize 3D terrain maps, artificial horizons, battery health metrics, or internal sensor health. The telemetry link enables real-time flight instrument monitoring, in-flight parameter tuning, and autonomous mission commanding from kilometers away without requiring tether cables.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> An onboard radio transceiver taps the flight controller's UART serial port (<code>TELEM 1</code>), modulates the serial binary packets into sub-gigahertz radio waves (915 MHz or 433 MHz), and transmits them over the air to a paired USB radio connected to the ground workstation.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All autonomous unmanned aerial systems (UAVs), search-and-rescue mapping drones, survey wings, and agricultural multirotors.</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> When the pilot adjusts a parameter or plans a survey grid on the desktop, Mission Planner encodes the command into MAVLink and sends it over the telemetry link. The drone acknowledges receipt and updates its onboard non-volatile memory in real time.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Basic familiarity with serial communication (Baud rate, UART TX/RX) and the ArduPilot ecosystem.</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. MAVLink Protocol & The Parameter Synchronization Handshake</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> Micro Air Vehicle Link (MAVLink); an ultra-lightweight, binary point-to-point communication protocol designed specifically for unmanned vehicles to transmit telemetry, navigation states, and hardware settings over bandwidth-constrained serial links.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Plain-text data structures (such as JSON or XML) consume excessive RF bandwidth and lack structured checksum verification. MAVLink packages data into compact binary frames with rigorous Cyclic Redundancy Check (CRC) error detection.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Upon clicking "Connect", Mission Planner initiates a handshake query. The flight controller responds by streaming all onboard registers (attitude, battery calibration, PID gains, failsafe triggers) into local PC RAM. Mission Planner displays a "Getting Params..." progress dialog until the parameter tree synchronizes completely.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Between the autopilot (Pixhawk / Cube / Durandal) and ground stations (Mission Planner / QGroundControl), as well as between the autopilot and onboard companion computers (Raspberry Pi via MAVProxy).</div>
+            <div class="concept-field"><span class="concept-label">Relationship to other concepts:</span> MAVLink operates on top of the physical serial RF link established by the SiK telemetry transceivers.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. Over-The-Air Telemetry Transceiver Hardware Pairing (SiK Architecture)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A matched pair of sub-gigahertz radio modems consisting of an **Air Module** (wired to the drone's flight controller) and a **Ground Module** (plugged into the PC via USB Type-A).</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Standard Wi-Fi signals suffer from high latency and limited line-of-sight range ($50 - 100\,\text{m}$). SiK frequency-hopping spread spectrum (FHSS) transceivers operate at $915\,\text{MHz}$ or $433\,\text{MHz}$, delivering robust telemetry ranges spanning hundreds of meters to several kilometers.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> When powered, the modules scan for matching Network IDs (NetID) and frequency channels. An unlinked module indicates search mode via a **blinking green LED**. Once the radio frequency link locks, both modules switch to a **solid green LED**, indicating the physical RF transport layer is established.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Standard ArduPilot and PX4 telemetric interfaces.</div>
+        </div>
+
+        <!-- Concept 4 -->
+        <div class="concept-card">
+            <div class="concept-header">4. Serial Baud Rate Matching (57600 Wireless vs. 115200 Wired USB)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The transmission speed (modulation rate in symbols per second) configured on the asynchronous serial UART communication link.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> Over-the-air radio frequency bandwidth is physically restricted. Transmitting data at USB cable speeds over wireless channels would cause massive packet loss, buffer overruns, and RF channel saturation.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> Direct wired USB connections to flight controllers operate at **`115200 baud`**. Standard wireless SiK telemetry radios operate strictly at **`57600 baud`**. Setting Mission Planner to `115200` when connecting via wireless radio modems causes framing errors, preventing packet decoding.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> The connection dropdown bar in the upper-right corner of Mission Planner.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Specifications & Hardware Architecture</h2>
+        <p>
+            The table below breaks down the technical parameters, electrical interfaces, and operational specifications governing the telemetry radio and Mission Planner interface:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter / Component</th>
+                        <th>Air Telemetry Transceiver (Drone Side)</th>
+                        <th>Ground Telemetry Transceiver (PC Side)</th>
+                        <th>Direct Micro-USB / Type-C Cable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Physical Connector</strong></td>
+                        <td>6-pin JST-GH / Molex Clik-Mate / DF13</td>
+                        <td>USB Type-A Male Plug</td>
+                        <td>Micro-USB or USB Type-C directly to FC</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Electrical Power Source</strong></td>
+                        <td>Regulated $+5.0\,\text{V}$ from FC <code>TELEM 1</code> port</td>
+                        <td>$+5.0\,\text{V}$ ($100 - 500\,\text{mA}$) from PC USB bus</td>
+                        <td>$+5.0\,\text{V}$ direct from PC motherboard bus</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Serial Protocol / Standard</strong></td>
+                        <td>TTL Asynchronous Serial ($3.3\,\text{V} / 5\,\text{V}$ logic)</td>
+                        <td>Virtual COM Port (CP210x or FTDI bridge)</td>
+                        <td>Native USB Virtual COM Port (VCP)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Operating Baud Rate</strong></td>
+                        <td><strong><code>57600 baud</code></strong> (Standard over-the-air)</td>
+                        <td><strong><code>57600 baud</code></strong> (Matched in GCS)</td>
+                        <td><strong><code>115200 baud</code></strong> (High-speed wired bus)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Primary Operating Frequencies</strong></td>
+                        <td>$915\,\text{MHz}$ (Americas) or $433\,\text{MHz}$ (Europe/UK)</td>
+                        <td>$915\,\text{MHz}$ (Americas) or $433\,\text{MHz}$ (Europe/UK)</td>
+                        <td>N/A (Conducted differential copper bus)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unpaired Status Indicator</strong></td>
+                        <td><strong>Blinking Green LED</strong> (Scanning channels)</td>
+                        <td><strong>Blinking Green LED</strong> (Scanning channels)</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Paired Status Indicator</strong></td>
+                        <td><strong>Solid Green LED</strong> (RF link layer locked)</td>
+                        <td><strong>Solid Green LED</strong> (RF link layer locked)</td>
+                        <td>N/A (Windows USB device connection chime)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Active Data Transmission LED</strong></td>
+                        <td>Flickering Red LED (Packets transmitting)</td>
+                        <td>Flickering Red LED (Packets receiving)</td>
+                        <td>Solid/Flickering onboard Pixhawk status LEDs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>RF Output Stage Protection Rule:</strong><br>
+                Never power up an air or ground telemetry module without its rubber-duck antenna securely attached. Operating RF transceivers without an antenna produces impedance mismatch reflections that can overheat and permanently burn out the radio's high-frequency power amplifier (PA) stage.
+            </div>
+        </div>
+
+        <div class="callout context">
+            <span class="callout-icon">ℹ️</span>
+            <div>
+                <strong>Additional Context: OS Compatibility:</strong><br>
+                As noted in the video, Mission Planner is written natively in C# for the Microsoft Windows .NET framework. While experimental builds exist using Mono for macOS and Linux, Windows is the officially supported environment. For cross-platform desktop telemetry on Linux or macOS, QGroundControl is the primary alternative.
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works -->
+    <section>
+        <h2>⚙️ How It Works: System Architecture & Telemetry Data Routing</h2>
+        <p>
+            The diagram below illustrates how telemetry packets, hardware power, and sensor readings traverse from the drone's flight computer to the ground station display:
+        </p>
+
+        <pre>
++---------------------------------------------------------------------------------------------------+
+| AIRCRAFT AIRFRAME (DRONE)                                                                         |
+|                                                                                                   |
+|  [ Internal IMU Sensors ] ----> [ STM32 Microcontroller Core ]                                    |
+|  [ External GPS Puck    ] ----> (Calculates Attitude & GPS Position)                              |
+|                                            |                                                      |
+|                                            v (Encodes MAVLink Binary Stream)                      |
+|                                    [ TELEM 1 UART Port ]                                          |
+|                                            |                                                      |
+|                                            v (Serial TTL @ 57600 Baud)                            |
+|                               +----------------------------+                                      |
+|                               | AIR TELEMETRY RADIO MODULE |                                      |
+|                               | - Blinking Green = Seeking |                                      |
+|                               | - SOLID GREEN = PAIRED     |                                      |
+|                               +--------------+-------------+                                      |
+|                                              |                                                    |
+|                                              v (Rubber-Duck Antenna)                              |
++----------------------------------------------:----------------------------------------------------+
+                                               :
+                                               :  Wireless Radio Frequency Stream
+                                               :  (915 MHz / 433 MHz FHSS Link @ 57600 Baud)
+                                               :
++----------------------------------------------:----------------------------------------------------+
+| GROUND STATION DESKTOP (PC)                  :                                                    |
+|                                              v (Rubber-Duck Antenna)                              |
+|                               +-------------------------------+                                   |
+|                               | GROUND TELEMETRY RADIO MODULE |                                   |
+|                               | - Blinking Green = Seeking    |                                   |
+|                               | - SOLID GREEN = PAIRED        |                                   |
+|                               +---------------+---------------+                                   |
+|                                               |                                                   |
+|                                               v (USB Type-A Plug)                                 |
+|                                   [ Native PC USB Port ]                                          |
+|                                               |                                                   |
+|                                               v (Silicon Labs CP210x / FTDI VCP Driver)           |
+|                                   [ Operating System COM Port ]                                   |
+|                                     (e.g., COM3, COM4, or AUTO)                                   |
+|                                               |                                                   |
+|                                               v                                                   |
+|                        +-----------------------------------------------+                          |
+|                        | MISSION PLANNER GROUND CONTROL STATION (GCS)  |                          |
+|                        | - Connection Bar: COMx / AUTO @ 57600 Baud    |                          |
+|                        | - Action: "CONNECT" -> Handshake Triggered    |                          |
+|                        | - Dialog: "Getting Params..." Progress Bar    |                          |
+|                        | - PFD / HUD: Live Artificial Horizon & Sats   |                          |
+|                        +-----------------------------------------------+                          |
++---------------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Bench Commissioning</h2>
+        <p>
+            The video demonstrates an end-to-end configuration pipeline to install Mission Planner, verify hardware radio binding, and establish a live MAVLink session:
+        </p>
+
+        <h3>Step 1: Download & Install Mission Planner on Windows</h3>
+        <ol>
+            <li>Open a web browser and navigate to the official ArduPilot download portal: <code>ardupilot.org/planner</code>.</li>
+            <li>Locate and download the latest stable Microsoft Installer package: <code>MissionPlanner-latest.msi</code>.</li>
+            <li>Launch the downloaded <code>.msi</code> setup wizard. Follow on-screen prompts using default installation directories.</li>
+            <li>
+                <strong>Device Driver Permissions:</strong> When Windows User Account Control (UAC) prompts for driver approvals, click <strong>Install</strong> to authorize the embedded FTDI, Silicon Labs CP210x, and PX4/STM32 Virtual COM Port drivers.
+            </li>
+            <li>Launch Mission Planner from the desktop shortcut.</li>
+        </ol>
+
+        <h3>Step 2: Power Up Drone & Verify Air Transceiver State</h3>
+        <ol>
+            <li>Screw the rubber-duck antenna firmly onto the drone's Air Telemetry Module.</li>
+            <li>Connect the telemetry cable harness from the radio module into the flight controller's <code>TELEM 1</code> port.</li>
+            <li>
+                Power the drone's flight controller (in the video, the instructor powers the board via USB or power module).
+            </li>
+            <li>
+                <strong>Observe the LED Status on the Drone:</strong>
+                <ul>
+                    <li>The Air Module illuminates with a <strong>Blinking Green LED</strong>.</li>
+                    <li><em>Meaning:</em> The module is receiving clean DC power, but it has not located its paired partner transceiver over the air.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Step 3: Connect Ground Telemetry Radio to PC & Confirm Hardware Lock</h3>
+        <ol>
+            <li>Screw the rubber-duck antenna firmly onto the Ground Telemetry Module.</li>
+            <li>Plug the Ground Module directly into a native USB port on the Windows computer.</li>
+            <li>
+                <strong>Observe Physical Hardware Pairing:</strong>
+                Within 1–3 seconds, the Ground Module and Air Module establish an RF lock:
+                <ul>
+                    <li>The blinking green LED on the drone's Air Module <strong>stops blinking and transitions to SOLID GREEN</strong>.</li>
+                    <li>The Ground Module on the computer also displays a continuous <strong>SOLID GREEN LED</strong>.</li>
+                    <li><em>Significance:</em> Physical RF hardware pairing is verified. Both modules share matching Network IDs and frequency-hopping parameters.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Step 4: Configure Port, Baud Rate & Connect in Mission Planner</h3>
+        <ol>
+            <li>Look at the top-right corner of the Mission Planner window.</li>
+            <li>
+                <strong>Port Dropdown:</strong> Select the assigned COM port (e.g., <code>COM4</code>, or select <strong><code>AUTO</code></strong> to allow Mission Planner to detect the plugged telemetry module automatically).
+            </li>
+            <li>
+                <strong>Baud Rate Dropdown:</strong> Set the baud rate dropdown strictly to <strong><code>57600</code></strong>.
+            </li>
+            <li>
+                Click the large green <strong>CONNECT</strong> button.
+            </li>
+            <li>
+                <strong>Parameter Download Phase:</strong>
+                Mission Planner sends a MAVLink query. A modal progress dialog titled <em>"Getting Params..."</em> appears on screen, reading configuration registers wirelessly from the flight controller into Mission Planner.
+            </li>
+            <li>
+                Once complete, the button switches to a red <strong>DISCONNECT</strong> state, confirming an active session.
+            </li>
+        </ol>
+
+        <h3>Step 5: Verify Live Telemetry on the Primary Flight Display (HUD)</h3>
+        <ol>
+            <li>Navigate to the <strong>Flight Data</strong> screen (top-left tab).</li>
+            <li>
+                <strong>Artificial Horizon Check:</strong> Tilt the drone up, down, left, and right by hand on the bench. The virtual artificial horizon on the HUD must tilt dynamically in real time to reflect the drone's true spatial orientation.
+            </li>
+            <li>
+                <strong>Heading & Altimeter Check:</strong> Rotate the drone horizontally; confirm the heading rose tracks smooth yaw rotation. Observe altitude and ground speed telemetry.
+            </li>
+            <li>
+                <strong>GPS Lock Check:</strong> If the GPS puck is connected, verify satellite acquisition indicators on the HUD console.
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands / Code -->
+    <section>
+        <h2>💻 Connection Configurations & Parameters</h2>
+
+        <h3>Mission Planner Connection Control Ribbon</h3>
+        <pre><code># ==============================================================================
+# MISSION PLANNER GCS CONNECTION CONTROLS (TOP-RIGHT RIBBON)
+# ==============================================================================
+
+Port:      [ AUTO ] or [ COM4 - Silicon Labs CP210x USB to UART Bridge ]
+Baud Rate: [ 57600 ]
+Button:    [ CONNECT ] ===> Transitions to [ DISCONNECT ] (Red background)
+
+# Data Transfer Handshake:
+# 1. MAVLink Ping -> Heartbeat received
+# 2. "Getting Params..." progress dialog populates (Downloading ~1000 parameters)
+# 3. HUD artificial horizon initializes and tracks vehicle IMU in real time</code></pre>
+
+        <h3>Underlying ArduPilot Telemetry Port Parameters (Reference)</h3>
+        <pre><code># ==============================================================================
+# FLIGHT CONTROLLER SERIAL PORT CONFIGURATION (FULL PARAMETER TREE)
+# ==============================================================================
+
+SERIAL1_PROTOCOL = 1        # 1 = MAVLink 1 / MAVLink 2 Protocol
+SERIAL1_BAUD     = 57       # 57 = 57600 Baud Rate (Required for SiK Telemetry)
+BRD_SER1_RTSCTS  = 2        # Auto-detect hardware flow control (RTS/CTS lines)</code></pre>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Solutions (Telemetry Troubleshooting)</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Problem</th>
+                        <th>Underlying Root Cause</th>
+                        <th>How to Identify Problem</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Connection Hangs: "Timeout waiting for packets"</strong></td>
+                        <td>Baud rate is configured to <code>115200</code> (the USB default) instead of <code>57600</code>.</td>
+                        <td>Mission Planner hangs indefinitely at "Connecting Mavlink", then presents a timeout error.</td>
+                        <td>Change the baud rate dropdown in the top-right corner from <code>115200</code> to <strong><code>57600</code></strong> and click Connect.</td>
+                        <td>Matches the transmission rate of the SiK radio's internal UART buffer, eliminating framing errors.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Telemetry Radios Never Achieve Solid Green LED</strong></td>
+                        <td>Air and Ground modules have mismatched frequency channels or conflicting <code>NetID</code> numbers.</td>
+                        <td>Both radios power up with blinking green LEDs and continue blinking indefinitely.</td>
+                        <td>Navigate to <code>Initial Setup -> Optional Hardware -> SiK Radio</code>; sync NetIDs and click <em>Copy required to remote</em>.</td>
+                        <td>Forces both transceivers onto the exact same frequency-hopping spread spectrum (FHSS) synchronization channel.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>COM Port Dropdown Is Blank / Device Not Listed</strong></td>
+                        <td>Windows did not install the Silicon Labs CP210x or FTDI USB-to-UART bridge virtual COM port driver.</td>
+                        <td>Device Manager displays an exclamation point under "Other Devices"; no COM port appears in Mission Planner.</td>
+                        <td>Re-run the Mission Planner <code>.msi</code> installer and approve all driver prompts, or download drivers directly from Silicon Labs.</td>
+                        <td>Registers the required USB serial driver, allowing Windows to enumerate the plugged radio as a valid serial port.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session Drops Halfway Through "Getting Params..."</strong></td>
+                        <td>Transmitter modules are placed too close to each other, overloading the RF receiver front-end (swamping).</td>
+                        <td>Progress bar begins downloading parameters, freezes around 15–30%, and disconnects.</td>
+                        <td>Separate the drone from the laptop by at least $1.5 - 2\,\text{m}$, or plug the Ground radio directly into a rear motherboard USB port.</td>
+                        <td>Prevents high RF input power from saturating the low-noise amplifier (LNA) on the receiving module.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Radio Module Disconnects When Motors Spin Up</strong></td>
+                        <td>Air module placed adjacent to unshielded high-current LiPo power leads, ESCs, or video transmitter (EMI).</td>
+                        <td>Telemetry link is stable on the bench, but packet reception drops to 0% as throttle increases.</td>
+                        <td>Relocate the Air Telemetry Module onto an arm or fuselage side away from battery leads and ESC power wiring.</td>
+                        <td>Minimizes electromagnetic induction and RF interference on the receiver antenna stage.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect: The Closed-Loop Telemetry Stream</h2>
+        <p>
+            The physical sensors, autopilot compute core, serial radio transceivers, and desktop ground station operate as a unified cyber-physical telemetry loop:
+        </p>
+
+        <pre>
+[ Drone Physical Orientation / Motion ]
+                  |
+                  v
+[ In-Flight IMU Sensors & Barometer ]
+                  |
+                  v
+[ Flight Controller Microcontroller (ArduPilot) ]
+  - Computes spatial attitude, heading, and altitude
+  - Serializes metrics into binary MAVLink data frames
+                  |
+                  v (Serial UART @ 57600 Baud)
+[ Drone Air Telemetry Radio (SiK Transceiver) ]
+                  |
+                  v (915 MHz / 433 MHz Over-The-Air Transmission)
+[ Ground Telemetry Radio (SiK Transceiver) ]
+                  |
+                  v (USB Bridge @ 57600 Baud)
+[ PC Operating System (COM Port) ]
+                  |
+                  v
+[ Mission Planner Ground Control Station ]
+  - Decodes binary MAVLink telemetry packets
+  - Updates Artificial Horizon on HUD in real time
+  - Tracks 3D GPS spatial coordinates and satellite locks
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Why It Matters</th>
+                        <th>Practical Workshop Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>GCS (Ground Control Station)</strong></td>
+                        <td>A desktop, laptop, or tablet software application that provides an interactive interface for autonomous vehicles.</td>
+                        <td>Serves as the mission control center to view telemetry, monitor battery depletion, adjust PID parameters, and plan missions.</td>
+                        <td>Mission Planner is the primary GCS software used for ArduPilot platforms.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MAVLink</strong></td>
+                        <td>Micro Air Vehicle Link; a binary serial communications protocol tailored for small unmanned vehicles.</td>
+                        <td>Enables high-efficiency, low-bandwidth communication with CRC error-checking between autopilots and ground stations.</td>
+                        <td>The protocol that displays the "Getting Params..." progress dialog when establishing a connection.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SiK Radio</strong></td>
+                        <td>An open-source telemetry radio firmware and hardware reference design created by 3DR.</td>
+                        <td>Provides long-range, frequency-hopping spread spectrum (FHSS) serial data transmission without requiring cellular data.</td>
+                        <td>Standard 915 MHz / 433 MHz telemetry transceivers bundled with Pixhawk kits.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Baud Rate</strong></td>
+                        <td>The rate at which information is transferred across an asynchronous serial communication channel (symbols/sec).</td>
+                        <td>Mismatched baud rates prevent serial transceivers and ground stations from synchronizing, causing communication timeouts.</td>
+                        <td>Direct USB operates at 115200 baud; wireless SiK telemetry radios operate at 57600 baud.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>COM Port (Virtual COM Port)</strong></td>
+                        <td>A software abstraction in Windows that presents a physical USB bridge connection as a legacy serial communications port.</td>
+                        <td>Allows Mission Planner to send and receive UART serial streams to external USB devices like the ground radio.</td>
+                        <td>Selected via the dropdown in the upper-right corner of Mission Planner (e.g., `COM3`, `COM4`, or `AUTO`).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NetID</strong></td>
+                        <td>A unique software identification number (0 to 499) stored inside SiK radio firmware registers.</td>
+                        <td>Prevents nearby radio telemetry pairs operating on the same frequency band from cross-talking or corrupting each other.</td>
+                        <td>Air and Ground modules must have identical NetID values to achieve a solid green pairing LED.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways: Workshop Rules & Field Procedures</h2>
+        <ul>
+            <li>🟢 <strong>Antennas Screwed On First:</strong> Always verify that antennas are tightly fastened to both the air and ground modules before applying power to prevent damaging the RF output amplifiers.</li>
+            <li>🟢 <strong>Verify Solid Green LEDs Before Connecting:</strong> Do not attempt to click "CONNECT" in Mission Planner while the telemetry LEDs are still blinking. The solid green indicator confirms hardware link lock.</li>
+            <li>🔴 <strong>The Baud Rate Rule (57600 for Wireless):</strong> Never attempt to connect wireless telemetry radios at 115200 baud. Set the dropdown strictly to <strong>`57600`</strong>.</li>
+            <li>🟡 <strong>Direct USB Ports for Ground Radio:</strong> Plug the ground telemetry radio directly into a native USB port on your PC motherboard; avoid cheap unpowered USB hubs that induce voltage sags.</li>
+            <li>🟢 <strong>Auto COM Selection Works:</strong> If you are unsure which COM port Windows assigned to your ground radio, select <strong>`AUTO`</strong> in the dropdown menu; Mission Planner will scan available ports.</li>
+            <li>🟢 <strong>Physical HUD Sanity Check:</strong> Always move the drone by hand on the bench after connecting. If you pitch the nose up, the artificial horizon HUD must reflect that pitch immediately.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Software Platform:</strong> Mission Planner is engineered natively for Windows systems to interface with the ArduPilot firmware ecosystem.</li>
+            <li><strong>Wireless Speed:</strong> Standard wireless SiK telemetry links operate at <strong><code>57600 baud</code></strong>.</li>
+            <li><strong>Wired Speed:</strong> Direct USB cable connections to flight controllers operate at <strong><code>115200 baud</code></strong>.</li>
+            <li><strong>LED Meaning (Blinking Green):</strong> Module is powered, scanning frequencies, searching for its partner transceiver.</li>
+            <li><strong>LED Meaning (Solid Green):</strong> Hardware link established; paired over the air and ready for MAVLink transmission.</li>
+            <li><strong>Data Protocol:</strong> MAVLink binary frames carry serial parameters and flight metrics wirelessly.</li>
+            <li><strong>Next Milestone:</strong> Once telemetry is connected, sensor calibration (accelerometer, compass, radio endpoints) must be completed.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why must the baud rate in Mission Planner be set to 57600 when connecting via telemetry radios instead of 115200?</div>
+            <div class="qa-answer">Wireless SiK telemetry radios have hardware-defined over-the-air RF bandwidth and internal serial UART buffers configured by default to 57600 baud. Setting Mission Planner to 115200 causes serial framing errors and timing mismatches, preventing MAVLink packets from being decoded. Direct USB cables use 115200 because a hardwired bus supports higher throughput.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: What do a blinking green LED and a solid green LED signify on SiK telemetry modules?</div>
+            <div class="qa-answer">A blinking green LED indicates that the module has power but is actively scanning frequency channels and searching for its paired transceiver. A solid green LED indicates that the air and ground modules have successfully locked onto each other using matching frequency-hopping channels and NetIDs, establishing the physical link layer.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: What process is occurring when Mission Planner displays the "Getting Params..." progress dialog?</div>
+            <div class="qa-answer">Mission Planner is querying the flight controller over MAVLink and downloading all operational parameters (PID gains, sensor calibration offsets, failsafe limits, flight modes) from the autopilot's onboard non-volatile memory into the local GCS workspace.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: Why is it dangerous to power up telemetry radio modules without their antennas attached?</div>
+            <div class="qa-answer">Operating a high-frequency RF transceiver without an antenna creates an impedance mismatch. The radio waves cannot be radiated into the air and reflect back into the output circuitry, dissipating as excess heat and permanently destroying the power amplifier (PA) stage.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: How does a builder verify on the bench that telemetry communication is actively streaming live motion data?</div>
+            <div class="qa-answer">By navigating to the Flight Data screen in Mission Planner and manually pitching and rolling the drone by hand. If telemetry is functional, the virtual artificial horizon on the Heads-Up Display (HUD) moves in real time to reflect the aircraft's orientation.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Based on the connectivity established in this tutorial, the logical progression in the commissioning pipeline includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Mastered in This Guide:</strong><br>
+                Mission Planner installation, virtual COM port driver verification, SiK telemetry radio pairing, and wireless MAVLink parameter download.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>The Mission Planner Setup Wizard (Immediate Next Topic):</strong>
+                Executing the 16-step automated configuration sequence to declare frame geometry (`Copter X`), calibrate the 6-axis accelerometer, perform 3D live compass calibration, and configure power monitoring.
+            </li>
+            <li>
+                <strong>Radio Control (RC) Endpoint Calibration:</strong>
+                Powering the handheld transmitter and sweeping physical control sticks to register $1000\,\mu\text{s}$ minimum, $1500\,\mu\text{s}$ center, and $2000\,\mu\text{s}$ maximum pulse endpoints.
+            </li>
+            <li>
+                <strong>Flight Mode Switch Allocation:</strong>
+                Mapping a 3-position or 6-position transmitter switch to fundamental flight modes (`STABILIZE`, `ALT_HOLD`, `LOITER`, and `RTL`).
+            </li>
+            <li>
+                <strong>Pre-Arming Safety & Failsafe Configuration (Deeper Topic):</strong>
+                Configuring low-battery Return-To-Launch (RTL) actions and investigating pre-arm safety interlocks prior to outdoor flight.
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that <strong>Mission Planner connects over wireless telemetry at 57600 baud</strong> (compared to 115200 baud for USB); that <strong>solid green LEDs on both radio modules confirm hardware RF pairing</strong>; that <strong>"Getting Params..." downloads the autopilot's operational parameters</strong> into the ground station over MAVLink; and that <strong>tilting the drone must move the HUD artificial horizon in real time</strong>, you have mastered the core engineering principles of this guide and are fully prepared to begin sensor calibration.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
