@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixhawk & ArduPlane: Flashing and Basic Setup - Technical Study Notes</title>
+    <style>
+        :root {
+            --bg-canvas: #0b0f19;
+            --bg-card: #111827;
+            --bg-card-alt: #1a2234;
+            --bg-code: #050811;
+            --border-dim: #232d42;
+            --border-bright: #3b82f6;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-heading: #f8fafc;
+            --accent-cyan: #38bdf8;
+            --accent-blue: #60a5fa;
+            --accent-indigo: #818cf8;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 2.5rem 1rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .meta-header {
+            background: linear-gradient(135deg, #131d31 0%, #0d1322 100%);
+            border: 1px solid var(--border-dim);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+        }
+
+        .meta-header h1 {
+            font-size: 1.85rem;
+            color: var(--text-heading);
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-dim);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .meta-grid span strong {
+            color: var(--text-main);
+        }
+
+        .meta-grid a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .meta-grid a:hover {
+            text-decoration: underline;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-dim);
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        p {
+            margin-bottom: 1.1rem;
+            color: var(--text-main);
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        strong, b {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Concept Block Cards */
+        .concept-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-left: 4px solid var(--accent-indigo);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-header {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-indigo);
+            margin-bottom: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .concept-field {
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .concept-label {
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: inline-block;
+            min-width: 145px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.1rem 1.3rem;
+            margin: 1.25rem 0;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .callout.danger {
+            background-color: rgba(251, 113, 133, 0.08);
+            border: 1px solid rgba(251, 113, 133, 0.35);
+            color: #fecdd3;
+        }
+
+        .callout.warning {
+            background-color: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fef3c7;
+        }
+
+        .callout.tip {
+            background-color: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: #d1fae5;
+        }
+
+        .callout.info {
+            background-color: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e0f2fe;
+        }
+
+        .callout.context {
+            background-color: rgba(129, 140, 248, 0.08);
+            border: 1px solid rgba(129, 140, 248, 0.35);
+            color: #e0e7ff;
+        }
+
+        .callout-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Data Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.4rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-card-alt);
+            color: var(--accent-cyan);
+            padding: 0.85rem 1.1rem;
+            border-bottom: 2px solid var(--border-dim);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border-dim);
+            color: var(--text-main);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Diagrams & Code Blocks */
+        pre {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin: 1.2rem 0;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            color: var(--accent-cyan);
+            font-size: 0.88em;
+            border: 1px solid var(--border-dim);
+        }
+
+        /* Q&A Cards */
+        .qa-card {
+            background-color: var(--bg-card-alt);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .qa-question {
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            padding-left: 1.4rem;
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        /* Final Synthesis Box */
+        .synthesis-card {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border: 2px dashed var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1.8rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .synthesis-card h3 {
+            color: var(--accent-cyan);
+            margin-top: 0;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .synthesis-card p {
+            color: var(--text-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0;
+            text-align: center;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 🎥 Video Header -->
+    <header class="meta-header">
+        <h1>🎥 PixHawk / Mission Planner / ArduPlane Build for Beginners: Flashing and Basic Setup</h1>
+        <div class="meta-grid">
+            <span><strong>Source:</strong> <a href="https://www.youtube.com/watch?v=L-pERGhK9rs" target="_blank" rel="noopener noreferrer">YouTube - Painless360</a></span>
+            <span><strong>Duration:</strong> 17m 57s</span>
+            <span><strong>Instructor:</strong> Painless360</span>
+            <span><strong>Main Topic:</strong> Benchtop Commissioning: Driver Hygiene, Firmware Flashing, and 3-Tier Sensor Calibration</span>
+        </div>
+    </header>
+
+    <!-- 🎯 What This Video Is About -->
+    <section>
+        <h2>🎯 What This Video Is About</h2>
+        <p>
+            This tutorial details the mandatory benchtop commissioning procedure that must occur before physically installing a <strong>Pixhawk</strong> (specifically demonstrated with a <strong>Pixhawk 2.1 Cube Black</strong>) into an airframe. Performing firmware flashing, receiver binding, and initial sensor baselining on an open workbench ensures that any software defects, communication timeouts, or hardware misconfigurations are diagnosed in isolation, eliminating the frustration of troubleshooting inside a cramped fuselage.
+        </p>
+        <p>
+            The video guides the viewer through wiping legacy Ground Control Station (GCS) driver conflicts, configuring a raw 4-channel radio model without onboard mixing, navigating the disconnected firmware flasher inside <strong>Mission Planner</strong>, and executing the mandatory hardware calibrations: 6-axis orthogonal accelerometer sampling, 3D live spherical compass calibration, and radio control endpoint normalization.
+        </p>
+    </section>
+
+    <!-- 🧠 Core Concepts -->
+    <section>
+        <h2>🧠 Core Concepts</h2>
+
+        <!-- Concept 1 -->
+        <div class="concept-card">
+            <div class="concept-header">1. The Zero-Mixer Radio Principle (Autopilot Aerodynamic Authority)</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> A strict configuration rule mandating that the RC transmitter output pure, unmixed stick commands on Channels 1 through 4 (Aileron, Elevator, Throttle, Rudder), even when the target aircraft is an elevon flying wing or a V-tail.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> If mixing is programmed inside the handheld radio transmitter, the autopilot receives compounded mathematical inputs. ArduPlane requires raw demand setpoints from the pilot so its internal cascaded PID controllers can calculate vehicle attitude errors and dynamically mix control surface actuations to provide active stabilization and flight autonomy.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> The transmitter outputs discrete single-axis deflections over S.Bus or CRSF. ArduPlane's mixer matrix (configured later in <code>SERVOx_FUNCTION</code>) takes the pitch and roll demands, combines them with internal gyroscopic rate damping, and drives the physical servos.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> All fixed-wing and VTOL aircraft governed by autonomous flight controllers (ArduPlane, PX4, iNav).</div>
+            <div class="concept-field"><span class="concept-label">Example:</span> On a V-tail aircraft, the pilot pulls the pitch stick back. If the radio has V-tail mixing active, it commands Ch 1 and Ch 2 simultaneously. The autopilot misinterprets this as combined roll and pitch requests, producing severe control instability.</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Basic familiarity with radio channel assignments (AETR vs. TAER).</div>
+        </div>
+
+        <!-- Concept 2 -->
+        <div class="concept-card">
+            <div class="concept-header">2. Disconnected Bootloader Flashing Architecture</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> The software requirement that firmware flashing must be executed while Mission Planner is <strong>disconnected</strong> from active MAVLink communications.</div>
+            <div class="concept-field"><span class="concept-label">Why do we use it?</span> An active MAVLink telemetry session continuously queries the autopilot's main flight loop over serial. The microcontroller's internal bootloader ROM cannot safely erase flash sectors and stream a new operating system binary while an active telemetry session locks the serial port.</div>
+            <div class="concept-field"><span class="concept-label">How does it work?</span> When the user selects the target firmware in Mission Planner, the GCS issues a soft-reboot command to the board. The STM32 processor resets into its native bootloader. The flasher erases old flash memory, writes the compiled ArduPlane binary, and verifies checksums before the main flight code boots.</div>
+            <div class="concept-field"><span class="concept-label">Where is it used?</span> Initial board bring-up, major version updates, or cross-flashing between airframe types (e.g., ArduCopter to ArduPlane).</div>
+            <div class="concept-field"><span class="concept-label">Prerequisites:</span> Correctly registered STM32 / PX4 Virtual COM Port (VCP) drivers.</div>
+        </div>
+
+        <!-- Concept 3 -->
+        <div class="concept-card">
+            <div class="concept-header">3. ArduPlane Channel 2 (Elevator) Negative Logic</div>
+            <div class="concept-field"><span class="concept-label">What is it?</span> An architectural quirk in ArduPlane's radio input mapping where pushing the pitch stick forward (commanding aircraft nose-down / dive) expects a lower microsecond ($\mu\text{s}$) PWM value, contrary to standard radio manufacturer conventions.</div>
+            <div class="concept-field"><span class="concept-label">Why do we study it?</span> Most stock radio transmitters output a higher pulse width ($> 1500\,\mu\text{s}$) when the elevator stick is pushed forward. If not inverted on the transmitter, ArduPlane interprets forward stick as a command to pull the nose up into an aerodynamic stall.</div>
+            <div class="concept-field"><span class="concept-label">The Engineering Fix:</span> Reversing Channel 2 (Elevator) strictly inside the transmitter's output/servo menu prior to conducting the initial radio calibration in Mission Planner.</div>
+        </div>
+    </section>
+
+    <!-- 🔧 Technical Details -->
+    <section>
+        <h2>🔧 Technical Details: Hardware Architecture & Signal Specifications</h2>
+        <p>The bench setup isolates the flight computer, GNSS module, and receiver from high-voltage propulsion elements:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hardware Component</th>
+                        <th>Specific Role in Bench Commissioning</th>
+                        <th>Physical Interface / Port</th>
+                        <th>Electrical & Logic Specification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pixhawk 2.1 (Cube Black)</strong></td>
+                        <td>Compute core running dual STM32 processors (F427 main + F100 failsafe). Houses triple redundant IMUs and internal heater.</td>
+                        <td>Side Micro-USB Port</td>
+                        <td>Powered strictly via USB 5V ($5.0\text{V} \pm 0.25\text{V}$, $< 500\,\text{mA}$). Direct PC connection required.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard Carrier Board</strong></td>
+                        <td>Breaks out internal Cube buses to JST-GH and standard 3-pin servo headers.</td>
+                        <td>Full breakout matrix</td>
+                        <td>Houses onboard power management logic and secondary peripheral routing.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>External GPS / Compass Puck</strong></td>
+                        <td>Provides tri-axial magnetometer heading data and geodetic satellite positioning.</td>
+                        <td><code>GPS 1</code> port (8-pin JST-GH)</td>
+                        <td>Combines serial UART (38400/115200 baud) and synchronous $\text{I}^2\text{C}$ bus lines (SDA/SCL).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RC Radio Receiver (FrSky / S.Bus)</strong></td>
+                        <td>Transfers raw, digital multi-channel stick commands from the transmitter to the autopilot.</td>
+                        <td><code>RC IN</code> port (3-pin header)</td>
+                        <td>Digital inverted S.Bus protocol. <strong>Energized directly from the USB bus during bench setup.</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Handheld Transmitter</strong></td>
+                        <td>Encodes pilot stick positions and auxiliary flight mode switches into serialized digital frames.</td>
+                        <td>Over-The-Air RF Link (2.4GHz / 915MHz)</td>
+                        <td>Configured in <strong>Mode 2</strong> (Throttle/Yaw Left; Pitch/Roll Right) using raw <strong>AETR</strong> channel mapping.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout danger">
+            <span class="callout-icon">🔴</span>
+            <div>
+                <strong>The Direct PC USB Connection Mandate:</strong><br>
+                Never connect the Pixhawk to your computer through an unpowered external USB hub, keyboard pass-through, or front-chassis splitter during firmware flashing. Voltage drops or packet framing collisions across shared hubs can interrupt the STM32 bootloader mid-write, resulting in a soft-bricked microcontroller that requires hardware DFU recovery. Always plug directly into a native motherboard USB port.
+            </div>
+        </div>
+
+        <div class="callout warning">
+            <span class="callout-icon">⚠️</span>
+            <div>
+                <strong>The Servo Rail Power Isolation Boundary:</strong><br>
+                Connecting the USB cable energizes the internal microcontroller, internal sensors, and the <code>RC IN</code> receiver header. <strong>It does not deliver power to the center positive rail (+5V) of MAIN OUT (1–8) or AUX OUT (1–6).</strong> Do not plug servos into the output rail expecting them to operate under USB power alone. Servos remain limp until energized by an external 5V BEC.
+            </div>
+        </div>
+    </section>
+
+    <!-- ⚙️ How It Works (System Architecture & Diagrams) -->
+    <section>
+        <h2>⚙️ System Architecture & Signal Flow</h2>
+        <p>The diagram below depicts the physical bench setup and data routing during the flashing and calibration stage:</p>
+
+        <pre>
+   [ Workstation PC Running Mission Planner ]
+         |
+         | (Direct Motherboard USB Cable: 5.0V Logic Power + Serial DFU / MAVLink @ 115200 Baud)
+         v
++---------------------------------------------------------------------------------------------------+
+| BENCH COMMISSIONING ENVIRONMENT (PROPELLERS & MAIN BATTERY ABSENT)                                |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | PIXHAWK 2.1 CUBE BLACK & STANDARD CARRIER BOARD                                             |  |
+|  |                                                                                             |  |
+|  |   [Side Micro-USB Port] <--- Direct Host Data Link                                          |  |
+|  |                                                                                             |  |
+|  |   [Internal Dual IMUs + Baro] <--- Sampled during 6-Axis Accelerometer Calibration          |  |
+|  |                                                                                             |  |
+|  |   [Internal Triple Magnetometers]                                                           |  |
+|  |               ^                                                                             |  |
+|  |               | (Synchronized Live 3D Spherical Tumble)                                     |  |
+|  |               v                                                                             |  |
+|  |   [GPS 1 Port (UART + I2C)] <=======(Shared Harness)=======> [External GPS/Compass Puck]    |  |
+|  |                                                               (Arrow aligned Forward)       |  |
+|  |                                                                                             |  |
+|  |   [RC IN Port] <=======(S.Bus / PPM Digital Lead)===========> [Bound RC Receiver]           |  |
+|  |   (+5V Rail Active via USB)                                          ^                      |  |
+|  +----------------------------------------------------------------------|----------------------+  |
+|                                                                         :                         |
+|                                                                         : (2.4GHz / 915MHz RF)    |
+|                                                                         v                         |
+|                                                            [ Handheld Transmitter ]               |
+|                                                            - Model: Standard Airplane             |
+|                                                            - Mixing: 100% Inhibited (Raw AETR)    |
+|                                                            - Channel 2 (Elevator): REVERSED       |
+|                                                            - Channel 8: 3-Pos Mode Switch         |
++---------------------------------------------------------------------------------------------------+
+        </pre>
+    </section>
+
+    <!-- 🛠️ Practical Implementation -->
+    <section>
+        <h2>🛠️ Practical Implementation: Step-by-Step Commissioning Roadmap</h2>
+        <p>Follow this exact chronological sequence to commission the electronics on the bench:</p>
+
+        <h3>Phase 1: Driver Hygiene & Workstation Preparation</h3>
+        <ol>
+            <li>
+                <strong>Purge Legacy Drivers:</strong> If legacy APM 2.5/2.6 boards or old Mission Planner versions were previously used, perform a clean uninstall. Old FTDI virtual COM port drivers can conflict with modern 32-bit STM32 composite drivers.
+            </li>
+            <li>
+                <strong>Fresh Mission Planner Installation:</strong> Download and install the latest stable <code>.msi</code> build from the official ArduPilot portal. During installation, accept all Windows User Account Control (UAC) prompts to inject the certified PX4, STM32 Bootloader, and Silicon Labs device drivers.
+            </li>
+        </ol>
+
+        <h3>Phase 2: Handheld Transmitter Baseline Configuration</h3>
+        <ol start="3">
+            <li>
+                <strong>Create a Clean Model:</strong> In your transmitter (EdgeTX, OpenTX, FrSky, RadioMaster), create a fresh profile. Select a standard fixed-wing aircraft format (1 Aileron, 1 Elevator, 1 Throttle, 1 Rudder). <strong>Do not enable elevon, V-tail, or delta mixing.</strong>
+            </li>
+            <li>
+                <strong>Verify Channel Order (AETR):</strong>
+                <ul>
+                    <li>Channel 1: Aileron (Roll Axis)</li>
+                    <li>Channel 2: Elevator (Pitch Axis) $\rightarrow$ <strong>Set to REVERSED in transmitter outputs.</strong></li>
+                    <li>Channel 3: Throttle (Propulsion Axis)</li>
+                    <li>Channel 4: Rudder (Yaw Axis)</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Assign Flight Mode Switch:</strong> Assign a physical 3-position toggle switch to <strong>Channel 8</strong> (standard default for ArduPlane mode selection).
+            </li>
+            <li>
+                <strong>Bind Receiver:</strong> Bind the receiver to the transmitter on the bench.
+            </li>
+        </ol>
+
+        <h3>Phase 3: Firmware Flashing (The Disconnected Workflow)</h3>
+        <ol start="7">
+            <li>
+                <strong>Hardware Layout:</strong> Connect the external GPS/compass puck to the <code>GPS 1</code> port, ensuring the puck's forward arrow points parallel to the Pixhawk's forward arrow. Connect the receiver to <code>RC IN</code>. Leave motor ESCs, telemetry radios, and battery leads completely disconnected.
+            </li>
+            <li>
+                <strong>Launch Mission Planner:</strong> Open Mission Planner. <strong>Do NOT click the green "CONNECT" button in the upper right corner.</strong>
+            </li>
+            <li>
+                <strong>Initiate Firmware Flasher:</strong>
+                Navigate to: <code>Initial Setup -> Install Firmware</code>.
+                Click the <strong>Plane</strong> airframe icon (ArduPlane official release, e.g., Plane 4.0.x).
+            </li>
+            <li>
+                <strong>Select Hardware Target:</strong> When prompted with board variants, select <strong>CubeBlack</strong> (or the exact silicon variant corresponding to your board).
+            </li>
+            <li>
+                <strong>Execute Bootloader Re-enumeration:</strong> Mission Planner will download the hex binary and display: <em>"Please unplug the board, click OK, plug back in"</em>.
+                Unplug the USB cable from the Pixhawk, click <strong>OK</strong>, and plug the USB cable back in within 5 seconds.
+            </li>
+            <li>
+                <strong>Automated Flash & Verification:</strong> The flasher detects the STM32 bootloader, wipes the internal EEPROM, writes the new ArduPlane operating system, and verifies data integrity. Upon completion, the autopilot emits an audible musical initialization chime.
+            </li>
+        </ol>
+
+        <h3>Phase 4: Establishing MAVLink & Sensor Calibrations</h3>
+        <ol start="13">
+            <li>
+                <strong>Connect Telemetry:</strong> In the upper-right corner of Mission Planner, select the active virtual COM port (e.g., <code>COM3 - CubeBlack</code>) and set the baud rate strictly to <strong><code>115200</code></strong>. Click <strong>CONNECT</strong>. Parameter tables will populate across the link.
+            </li>
+            <li>
+                <strong>HUD Sanity Check:</strong> Go to the <code>Flight Data</code> screen. Tilt the board physically. Confirm the artificial horizon tracks the motion in real time.
+            </li>
+            <li>
+                <strong>6-Axis Accelerometer Calibration:</strong>
+                Navigate to: <code>Initial Setup -> Mandatory Hardware -> Accel Calibration</code>.
+                Click <strong>Calibrate Accelerometer</strong>. Sequentially place the unit in 6 orthogonal positions:
+                <ul>
+                    <li><strong>Level:</strong> Flat on workbench, top facing up $\rightarrow$ Click when done.</li>
+                    <li><strong>Left:</strong> Resting squarely on its left edge $\rightarrow$ Click when done.</li>
+                    <li><strong>Right:</strong> Resting squarely on its right edge $\rightarrow$ Click when done.</li>
+                    <li><strong>Nose Down:</strong> Vertical with arrow pointing straight down $\rightarrow$ Click when done.</li>
+                    <li><strong>Nose Up:</strong> Vertical with arrow pointing straight up $\rightarrow$ Click when done.</li>
+                    <li><strong>On Back:</strong> Completely inverted, top facing down $\rightarrow$ Click when done.</li>
+                </ul>
+                <div class="callout warning">
+                    <span class="callout-icon">⚠️</span>
+                    <div>
+                        <strong>Stationary Sampling Rule:</strong> Ensure the flight controller is resting completely motionless on a solid surface before pressing each confirmation key. Hand tremors or table vibrations inject linear acceleration noise into the EKF bias calculations. Note: <strong>Calibrate Level</strong> is skipped during bench setup and performed after the unit is permanently installed in the airframe.
+                    </div>
+                </div>
+            </li>
+            <li>
+                <strong>Live 3D Compass Calibration:</strong>
+                Navigate to: <code>Mandatory Hardware -> Compass</code>. Click <strong>Live Calibration</strong>.
+                Pick up both the flight controller and the GPS puck together (keeping their orientation arrows parallel). Slowly rotate and tumble the assembly in continuous 360° spheres across roll, pitch, and yaw axes. Data points populate the spherical sampling matrix. Once the progress bars fill, click <strong>OK</strong> and power-cycle the board.
+            </li>
+            <li>
+                <strong>Radio Control Calibration:</strong>
+                Navigate to: <code>Mandatory Hardware -> Radio Calibration</code>.
+                Power on the bound RC transmitter. Click <strong>Calibrate Radio</strong>.
+                Move both gimbals simultaneously to their extreme diagonal corners to register maximum travel boundaries. Flip the Channel 8 mode switch through all 3 positions. Ensure:
+                <ul>
+                    <li>Roll (Ch 1): Left = $\sim 1000\,\mu\text{s}$, Right = $\sim 2000\,\mu\text{s}$</li>
+                    <li>Pitch (Ch 2): Forward/Down = $\sim 1000\,\mu\text{s}$, Back/Up = $\sim 2000\,\mu\text{s}$ (Verified inverted)</li>
+                    <li>Throttle (Ch 3): Bottom = $\sim 1000\,\mu\text{s}$, Top = $\sim 2000\,\mu\text{s}$</li>
+                    <li>Yaw (Ch 4): Left = $\sim 1000\,\mu\text{s}$, Right = $\sim 2000\,\mu\text{s}$</li>
+                </ul>
+                Pull throttle to zero, center all other sticks, and click <strong>Click when Done</strong> to commit limits.
+            </li>
+        </ol>
+    </section>
+
+    <!-- 💻 Commands, Parameters & Settings -->
+    <section>
+        <h2>💻 Parameters, PWM Channels & Technical Registers</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter / Metric</th>
+                        <th>Standard Value / Setting</th>
+                        <th>Functional Operational Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>USB Baud Rate</strong></td>
+                        <td><code>115200</code></td>
+                        <td>Standard asynchronous UART rate for direct native USB-to-VCP MAVLink telemetry sessions.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Wireless Telemetry Baud</strong></td>
+                        <td><code>57600</code></td>
+                        <td>Over-the-air serial rate used by external SiK RF modems connected to <code>TELEM 1</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Channel 1 (Aileron)</strong></td>
+                        <td>$1000\,\mu\text{s} - 2000\,\mu\text{s}$ ($1500\,\mu\text{s}$ center)</td>
+                        <td>Roll demand input. Right stick horizontal deflection.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Channel 2 (Elevator)</strong></td>
+                        <td>$1000\,\mu\text{s} - 2000\,\mu\text{s}$ (Reversed polarity)</td>
+                        <td>Pitch demand input. Pushing stick forward drives PWM toward $1000\,\mu\text{s}$.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Channel 3 (Throttle)</strong></td>
+                        <td>$1000\,\mu\text{s} - 2000\,\mu\text{s}$ ($1000\,\mu\text{s}$ idle)</td>
+                        <td>Propulsion demand input. Bottom stick represents zero throttle demand.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Channel 4 (Rudder)</strong></td>
+                        <td>$1000\,\mu\text{s} - 2000\,\mu\text{s}$ ($1500\,\mu\text{s}$ center)</td>
+                        <td>Yaw demand input. Left stick horizontal deflection.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Channel 8 (Flight Modes)</strong></td>
+                        <td>3-Position Switch Allocation</td>
+                        <td>Hardcoded default channel used by ArduPlane to trigger primary flight mode transitions.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>FLTMODE_CH</code></strong></td>
+                        <td><code>8</code></td>
+                        <td>ArduPilot parameter defining which incoming RC channel governs flight mode logic.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ⚠️ Common Problems & Solutions -->
+    <section>
+        <h2>⚠️ Common Problems & Engineering Solutions</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identified Fault Symptom</th>
+                        <th>Root Cause</th>
+                        <th>Diagnostic Identification</th>
+                        <th>Engineering Remediation</th>
+                        <th>Why the Solution Works</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Firmware Upload Fails:<br><code>Communication Error / No Heartbeat</code></strong></td>
+                        <td>Attempting to flash firmware while an active MAVLink telemetry session is running, or using an unpowered USB hub.</td>
+                        <td>Mission Planner hangs indefinitely at "Detecting Board" or displays serial timeout errors.</td>
+                        <td>Click <strong>DISCONNECT</strong> in the upper right. Ensure the green CONNECT button is showing. Plug USB directly into the motherboard and re-flash.</td>
+                        <td>Releases the host operating system COM port, allowing direct interaction with the STM32 bootloader ROM.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Elevator Commands Reversed in Flight Data</strong></td>
+                        <td>Radio transmitter outputting standard positive logic for pitch stick instead of ArduPlane negative logic.</td>
+                        <td>Pushing pitch stick forward drives the green Channel 2 calibration bar higher toward $2000\,\mu\text{s}$ instead of lower.</td>
+                        <td>Enter the handheld transmitter's output setup menu and invert/reverse Channel 2.</td>
+                        <td>Aligns physical gimbal forward motion with ArduPlane's internal nose-down convention ($1000\,\mu\text{s}$).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Accelerometer Calibration Times Out / Fails</strong></td>
+                        <td>The flight controller was moved, bumped, or vibrated while the algorithm was sampling gravitational vectors.</td>
+                        <td>Mission Planner displays: <code>Calibration Failed: Accels inconsistent</code>.</td>
+                        <td>Rest the board flat against a solid workbench block. Keep hands entirely off the board before pressing confirmation keys.</td>
+                        <td>Allows the sensor fusion filter to compute pure $1g$ static gravitational baselines without dynamic inertial noise.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multiple Compass Calibration Inconsistencies</strong></td>
+                        <td>Internal compasses in the Cube and external puck magnetometer rotating out of phase, or steel table interference.</td>
+                        <td>Compass calibration progress bars fill unevenly; offsets fail tolerance limits.</td>
+                        <td>Verify the GPS puck arrow is oriented parallel to the flight controller arrow. Calibrate away from metal benches.</td>
+                        <td>Ensures all active tri-axial magnetic sensor suites resolve a shared heading datum relative to Earth's geomagnetic field.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Receiver Unresponsive on Radio Calibration</strong></td>
+                        <td>Receiver cable plugged into wrong port, or S.Bus lead inverted/unpowered.</td>
+                        <td>Green radio channel bars in Mission Planner remain completely stationary at $0\,\mu\text{s}$ when gimbals move.</td>
+                        <td>Ensure receiver signal is plugged strictly into <strong><code>RC IN</code></strong> (not <code>SBUS OUT</code>). Verify transmitter is powered and bound.</td>
+                        <td><code>RC IN</code> routes through internal hardware inverters directly to the STM32 capture registers and supplies USB bus 5V power.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 🔗 How the Concepts Connect -->
+    <section>
+        <h2>🔗 How the Concepts Connect (Pre-Installation Validation Chain)</h2>
+        <p>The bench commissioning workflow creates a structured validation chain that prevents diagnosing compounding errors later:</p>
+
+        <pre>
+[Clean Windows OS + Certified Drivers]
+                 |
+                 v
+[Direct USB Cable Link (Baud: 115200)] =====> [STM32 Bootloader Execution]
+                                                               |
+                                                               v
+                                                [Flash ArduPlane OS Hex Binary]
+                                                               |
+                                                               v
+                                                [Establish MAVLink Telemetry]
+                                                               |
+     +---------------------------------------------------------+---------------------------------------------------------+
+     |                                                         |                                                         |
+     v                                                         v                                                         v
+[6-Axis Accel Sampling]                                 [Live Spherical Mag]                              [Raw 4-Channel Radio Link]
+ - 6 Orthogonal vectors mapped                           - Hard/soft iron offsets                         - Zero transmitter mixing
+ - Static $1g$ gravity datum locked                     - Aligned external compass                        - Ch 2 inverted for ArduPlane
+     |                                                         |                                                         |
+     +---------------------------------------------------------+---------------------------------------------------------+
+                                                               |
+                                                               v
+                                                [Validated Autonomous Core]
+                                                               |
+                                                               v
+                                        [Ready for Physical Airframe Installation]
+        </pre>
+    </section>
+
+    <!-- 📚 Technical Terminology -->
+    <section>
+        <h2>📚 Technical Terminology</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Technical Definition</th>
+                        <th>Context & Practical Importance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bootloader</strong></td>
+                        <td>A specialized, lightweight program executing from protected microcontroller ROM immediately upon system reset.</td>
+                        <td>Initializes hardware peripherals, verifies firmware checksums, and enables memory flashing without requiring external JTAG programmers.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DFU (Device Firmware Upgrade)</strong></td>
+                        <td>An official USB protocol standard enabling microcontrollers to download and execute firmware directly into flash memory.</td>
+                        <td>The mechanism used by Mission Planner to recover or re-flash raw STM32 chips over a standard USB cable.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AETR</strong></td>
+                        <td>Standard channel assignment: Ch 1 = Aileron, Ch 2 = Elevator, Ch 3 = Throttle, Ch 4 = Rudder.</td>
+                        <td>The default channel sequence expected by ArduPilot, Betaflight, and modern serial receiver protocols.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>S.Bus (Serial Bus)</strong></td>
+                        <td>A high-speed, single-wire digital serial communication protocol developed by Futaba transmitting up to 16 channels over UART.</td>
+                        <td>Eliminates individual multi-pin PWM servo cable bundles, routing all pilot stick commands over a single 3-pin lead into <code>RC IN</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Carrier Board</strong></td>
+                        <td>An external interface PCB that routes the internal high-density Hirose connectors of the Pixhawk Cube to standard external ports.</td>
+                        <td>Houses power distribution traces, port isolation circuitry, and physical JST-GH headers for sensors and telemetry.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VCP (Virtual COM Port)</strong></td>
+                        <td>A software driver mechanism emulating a hardware RS-232 serial communication port over a high-speed USB interface.</td>
+                        <td>Enables the computer operating system to communicate with the STM32 microcontroller using standard COM port serial terminal routines.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 💡 Practical Takeaways -->
+    <section>
+        <h2>💡 Practical Takeaways</h2>
+        <ul>
+            <li>🟢 <strong>Perform Driver Housekeeping First:</strong> Always uninstall legacy Mission Planner or APM 2.x drivers before connecting a modern Pixhawk. Fresh drivers prevent communication hangs during bootloader uploads.</li>
+            <li>🔴 <strong>Never Enable Radio Mixing:</strong> Even if your plane is an elevon flying wing or a V-tail, program your radio transmitter as a standard conventional airplane. All aerodynamic surface mixing must be executed inside ArduPlane.</li>
+            <li>🟡 <strong>Always Invert Channel 2:</strong> Invert the elevator channel inside your transmitter outputs before conducting radio calibration so that pushing the pitch stick forward outputs a lower microsecond value ($1000\,\mu\text{s}$).</li>
+            <li>🟢 <strong>Keep the Board Motionless During Accel Checks:</strong> When prompted to place the vehicle in each of the 6 positions, ensure the flight controller is resting completely motionless on a rigid surface before clicking confirmation keys.</li>
+            <li>⚠️ <strong>Keep Orientations Parallel:</strong> Ensure the directional arrow on the external GPS/compass puck points in the exact same heading as the arrow on the Pixhawk case during bench compass calibration.</li>
+            <li>🔴 <strong>Servos Will Not Move on USB Power:</strong> Remember that USB power energizes only the internal microcontroller and the <code>RC IN</code> pins. The servo rail center positive pin (+5V) remains dead until energized by an external ESC BEC.</li>
+        </ul>
+    </section>
+
+    <!-- 📝 Quick Revision -->
+    <section>
+        <h2>📝 Quick Revision (High-Yield Facts)</h2>
+        <ul>
+            <li><strong>Flashing Rule:</strong> Firmware installation inside Mission Planner must be initiated while <strong>disconnected</strong> from active MAVLink sessions.</li>
+            <li><strong>Direct USB Connection:</strong> Unpowered USB hubs cause voltage sags that can corrupt firmware flashing; connect directly to motherboard USB ports.</li>
+            <li><strong>Channel 8 Allocation:</strong> ArduPlane hardcodes incoming Channel 8 as the default flight mode selection channel.</li>
+            <li><strong>Accelerometer Positions:</strong> Six orthogonal orientations required: Level, Left side, Right side, Nose Down, Nose Up, and Back/Inverted.</li>
+            <li><strong>Level Calibration Timing:</strong> "Calibrate Level" is intentionally skipped on the bench and performed only after the flight controller is permanently mounted in the airframe.</li>
+            <li><strong>Compass Redundancy:</strong> The Pixhawk 2.1 Cube Black features triple internal magnetometers plus the external puck magnetometer.</li>
+        </ul>
+    </section>
+
+    <!-- ❓ Questions & Answers (Self-Assessment) -->
+    <section>
+        <h2>❓ Questions & Answers (Self-Assessment)</h2>
+
+        <div class="qa-card">
+            <div class="qa-question">Q1: Why must the handheld transmitter be configured without any elevon or V-tail mixing?</div>
+            <div class="qa-answer">ArduPlane relies on receiving pure, raw pilot intent (single-axis demands for pitch, roll, and yaw). If the radio mixes these channels, the autopilot receives compounded signals. It cannot differentiate between human stick input and aerodynamic perturbations, causing internal PID stabilization loops to fight the control surfaces and induce an immediate crash.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q2: Why must Channel 2 (Elevator) be reversed in the transmitter for ArduPlane?</div>
+            <div class="qa-answer">ArduPlane adheres to an internal mathematical convention where pushing the pitch stick forward (commanding a dive / nose-down attitude) expects a low PWM value ($1000\,\mu\text{s}$), whereas pulling back expects a high value ($2000\,\mu\text{s}$). Most standard radio transmitters output high PWM when pushed forward, requiring channel inversion on the radio to match ArduPlane's expected logic.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q3: What causes firmware uploads in Mission Planner to hang at "Detecting Board"?</div>
+            <div class="qa-answer">This typically occurs when the user clicks the green "CONNECT" button prior to flashing, establishing an active MAVLink serial session that locks the COM port, or when an unpowered USB hub causes voltage sags that prevent the STM32 chip from entering bootloader ROM mode.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q4: Why is "Calibrate Level" skipped during the benchtop accelerometer calibration?</div>
+            <div class="qa-answer">"Calibrate Accelerometer" samples the static $1g$ gravity vector across six orthogonal planes to calibrate the sensor's physical scale and bias. "Calibrate Level" sets the vehicle's true aerodynamic cruising datum ($0^\circ$ pitch and roll), which can only be established once the autopilot is physically mounted inside the assembled airframe with the wings propped at their design Angle of Attack.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="qa-question">Q5: Why does the RC receiver power up during bench testing, but connected servos do not?</div>
+            <div class="qa-answer">The Pixhawk's internal USB logic power bus energizes the core processor, internal IMUs, and the <code>RC IN</code> pin headers for bench configuration. However, the center positive pin (+5V) of the MAIN and AUX servo rails is electrically isolated to protect the CPU from inductive servo noise and brownouts, requiring an external 5V BEC to supply servo power.</div>
+        </div>
+    </section>
+
+    <!-- 🧭 What Should I Learn Next? -->
+    <section>
+        <h2>🧭 What Should I Learn Next?</h2>
+        <p>Following Painless360's beginner ArduPlane curriculum, the logical learning progression includes:</p>
+
+        <div class="callout tip">
+            <span class="callout-icon">📌</span>
+            <div>
+                <strong>Prerequisites Verified in This Video:</strong><br>
+                Clean firmware installation, 6-axis accelerometer baseline, multi-compass live offsets, and normalized radio endpoints.
+            </div>
+        </div>
+
+        <ol>
+            <li>
+                <strong>Airframe Physical Installation (Immediate Next Step):</strong>
+                Mechanically mounting the flight controller on the airframe Center of Gravity (CG), cutting USB service ports, and routing the Power Module harness into <code>POWER 1</code>.
+            </li>
+            <li>
+                <strong>Servo Output Routing & Aerodynamic Mixing:</strong>
+                Configuring Mission Planner's <code>Servo Output</code> menu to assign physical outputs (e.g., Output 1 = Aileron, Output 2 = V-Tail Left, Output 3 = V-Tail Right, Output 8 = Throttle).
+            </li>
+            <li>
+                <strong>Two-Stage Control Surface Deflection Verification:</strong>
+                Validating that manual sticks deflect surfaces correctly in <code>MANUAL</code> mode, and that autopilot stabilization loops oppose uncommanded aircraft motion in <code>FBWA</code> mode.
+            </li>
+            <li>
+                <strong>Pre-Arm Diagnostics & Auto-Trim Setup:</strong>
+                Resolving <code>PreArm: Check Airspeed</code> errors on airframes without pitot tubes (`ARSPD_TYPE = 0`) and enabling in-flight background servo auto-trim (`SERVO_AUTO_TRIM = 1`).
+            </li>
+        </ol>
+    </section>
+
+    <!-- ⭐ Final Understanding -->
+    <div class="synthesis-card">
+        <h3>⭐ Final Understanding (The Core Synthesis)</h3>
+        <p>
+            If you understand that <strong>flashing must occur while disconnected</strong> from MAVLink, that the <strong>transmitter must output pure raw sticks with Channel 2 reversed</strong> and zero radio mixing, that the <strong>board must remain completely motionless during 6-axis accelerometer sampling</strong>, and that the <strong>servo rail remains unpowered under USB</strong>, you have mastered the core engineering foundations of this tutorial and your electronics are fully validated to be installed safely into the aircraft airframe.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
